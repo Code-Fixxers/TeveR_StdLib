@@ -1,9 +1,12 @@
 package VectorExtensions
-
+//* StdLib
+import ClosureTimers
 import public GroupUtils
 import MapBounds
+//* TeveR_Main
 import GroupExtensions
-import ClosureTimers
+//* <--- imports
+
 
 public tuple lineFormular(real m, real b)
 
@@ -67,6 +70,9 @@ public function location.toVec2() returns vec2
 public function location.remove()
     RemoveLocation(this)
 
+public function vec2.getRectFromCircle(real radius) returns rect
+    return Rect(this.x - radius, this.y - radius, this.x + radius, this.y + radius)
+
 /** used to get units in range of the loc ! caution group needs to be released using group.release() or destroyed after usage !*/
 public function vec2.getUnitsInRange(real range) returns group 
     let g = getGroup()
@@ -87,21 +93,6 @@ public function vec2.getEnemiesInRange(real range, unit caster) returns group
         if not u.isEnemyOf(caster)
             g.remove(u)
     return g
-
-/** used to get closest enemy unit in range of the vec2*/
-public function vec2.getClosestEnemyInRange(real range, unit caster, bool onlyTargetable) returns unit
-    let g = this.getUnitsInRange(range)
-
-    var closestDist = REAL_MAX
-    unit closestUnit = null
-
-    if caster != null
-        for u in g
-            if u != caster and u.isEnemyOf(caster) and (not onlyTargetable or (u.isAlive() and not u.isInvulnerable() and not u.isPaused()))
-                if closestDist > u.getPos().distanceTo(this)
-                    closestDist = u.getPos().distanceTo(this)
-                    closestUnit = u
-    return closestUnit
 
 /** used to get units in range of the loc between min and max range ! caution group needs to be released using group.release() after usage !*/
 public function vec2.getUnitsInRangeEx(real minRange, real maxRange) returns group 
@@ -263,13 +254,14 @@ public function rect.debugBoundaries(real duration)
     let l1 = addLightning("DBRC", false, this.getRightTop(), this.getLeftTop())..setColor(color(0, 255, 0))
     let l2 = addLightning("DBRC", false, this.getLeftBot(), this.getLeftTop())..setColor(color(0, 255, 0))
     let l3 = addLightning("DBRC", false, this.getRightBot(), this.getRightTop())..setColor(color(0, 255, 0))
+    
     if duration > 0
         doAfter(duration) ->
             l0.destr()
             l1.destr()
             l2.destr()
             l3.destr()
-    
+
 /** addes a special effect to a target loc an returns it*/
 public function location.addSpecialEffect(string model) returns effect
     return AddSpecialEffectLoc(model, this)
