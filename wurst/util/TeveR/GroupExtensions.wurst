@@ -1,0 +1,114 @@
+/*
+*   Name:           GroupExtensions.wurst
+*   System:         General System
+*   Description:    This script serves for definition of serveral helper and enhanced usefull functions for groups
+*   Author:         Alex
+*/
+
+package GroupExtensions
+
+import public GroupUtils
+
+public enum UnitsInRangeTargetTypes
+    Random
+    LowestHP
+    LowestMaxHP
+    LowestMP
+    LowestMaxMP
+    LowestArmor
+    HighestHP
+    HighestMaxHP
+    HighestMP
+    HighestMaxMP
+    HighestArmor
+    Slowest
+    Fastest  
+
+function group.filterUnitByTargetType(UnitsInRangeTargetTypes targetType, unit only_enemy, int only_pId) returns unit
+    unit target = null
+    this.filterAliveUnits(only_enemy, only_pId)
+    
+    switch(targetType)
+        case Random
+            target = this.getRandom()
+        case LowestHP
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getHP() < tmp
+                    tmp = u.getHP()
+                    target = u   
+        case LowestMaxHP
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getMaxHP() < tmp
+                    tmp = u.getMaxHP()
+                    target = u   
+        case LowestMP
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getMana() < tmp
+                    tmp = u.getMana()
+                    target = u   
+        case LowestMaxMP
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getMaxMana() < tmp
+                    tmp = u.getMaxMana()
+                    target = u   
+        case LowestArmor
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getArmor() < tmp
+                    tmp = u.getArmor()
+                    target = u   
+        case HighestHP
+            var tmp = 0.
+            for u in this
+                if u.getHP() > tmp
+                    tmp = u.getHP()
+                    target = u   
+        case HighestMaxHP
+            var tmp = 0.
+            for u in this
+                if u.getMaxHP() > tmp
+                    tmp = u.getMaxHP()
+                    target = u
+        case HighestMP
+            var tmp = 0.
+            for u in this
+                if u.getMana() > tmp
+                    tmp = u.getMana()
+                    target = u
+        case HighestMaxMP
+            var tmp = 0.
+            for u in this
+                if u.getMaxMana() > tmp
+                    tmp = u.getMaxMana()
+                    target = u
+        case HighestArmor
+            var tmp = 0.
+            for u in this
+                if u.getArmor() > tmp
+                    tmp = u.getArmor()
+                    target = u 
+        case Slowest
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getMoveSpeed() < tmp
+                    tmp = u.getMoveSpeed()
+                    target = u 
+        case Fastest
+            var tmp = 0.
+            for u in this
+                if u.getMoveSpeed() > tmp
+                    tmp = u.getMoveSpeed()
+                    target = u 
+    return target
+
+/** removes all dead unit from group, optional also all that ar not enemy to a specific unit and that are not owned by specific player id */
+public function group.filterAliveUnits(unit only_enemy, int only_pId) returns group
+    for u in this
+        if u == null or not u.isAlive() or (only_enemy != null and not u.isEnemyOf(only_enemy)) or (only_pId != -1 and only_pId != u.getOwner().getId())
+            this.remove(u)
+    return this
+    

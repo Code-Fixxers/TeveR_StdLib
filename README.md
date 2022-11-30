@@ -21,3 +21,6 @@ By introducing a standard library, we offer the developers everything they need 
 https://wurstlang.org/stdlib
 
 
+# How to merge from Github
+
+https://stackoverflow.com/questions/65023718/how-to-fork-a-gitlab-repository-to-github

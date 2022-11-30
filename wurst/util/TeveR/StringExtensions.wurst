@@ -1,0 +1,133 @@
+package StringExtensions
+import ObjectIds
+import ErrorHandling
+
+
+public interface ForStringSplitCallback
+    function callback(string str)
+
+/** Custom Function which can split strings and runs callback for each string */
+public function string.forEachIn(string delim, ForStringSplitCallback cb)
+    if this.length() > 0
+        int i = 0
+        int pos = this.indexOf(delim, i)
+
+        if pos == -1
+            cb.callback(this.substring(i, this.length()))
+
+        while pos != -1
+            cb.callback(this.substring(i, pos))
+            pos += 1
+            i = pos
+            pos = this.indexOf(delim, pos)
+            if pos == -1
+                cb.callback(this.substring(i, this.length()))
+
+/** Custom Function which determins if a string contains another string */
+public function string.containsDelimited(string delim, string search) returns bool
+    var found = false
+    if this.length() > 0
+        int i = 0
+        int pos = this.indexOf(delim, i)
+
+        if pos == -1
+            found = this.substring(i, this.length()) == search
+
+        while pos != -1 and not found
+            found = this.substring(i, pos) == search
+            pos += 1
+            i = pos
+            pos = this.indexOf(delim, pos)
+            if pos == -1
+                found = this.substring(i, this.length()) == search
+    return found
+
+/** returns a substring specified by end and start position.  also checks if start > 0 and < length and stop is > start*/
+public function string._substring(int start, int stop) returns string
+    if start < 0 or start > this.length()-1 or stop < 0 or stop > this.length()-1 or start >= stop
+        return ""
+    else
+        return SubString(this, start, stop)
+
+/** Creates list of IDs converted from Int to their String value delimited by comma.*/
+public function createDelimitedRawCodeString(vararg int ids) returns string
+    string s = ""
+    var paramCount = 0
+    for id in ids
+        paramCount++
+        s += id.toRawCode()
+        s += ","
+    if s != ""
+        s = s.substring(0, s.length()-1)
+    if paramCount > WC3LIMIT_FUNCTIONS_PARAMETER_COUNT
+        error(WC3LIMIT_FUNCTIONS_PARAMETER_COUNT_ERROR)
+    return s
+
+/** Creates list of IDs converted from Int to their String value delimited by comma.*/
+public function createDelimitedString(vararg int ids) returns string
+    string s = ""
+    var paramCount = 0
+    for id in ids
+        paramCount++
+        s += id.toString()
+        s += ","
+    if s != ""
+        s = s.substring(0, s.length()-1)
+    if paramCount > WC3LIMIT_FUNCTIONS_PARAMETER_COUNT
+        error(WC3LIMIT_FUNCTIONS_PARAMETER_COUNT_ERROR)
+    return s
+
+
+/** Creates one long String from all Strings delimited by comma.*/
+public function createDelimitedString(vararg string ids) returns string
+    string s = ""
+    var paramCount = 0
+    for id in ids
+        paramCount++
+        if id != ""
+            s += id
+            s += ","
+    if s != ""
+        s = s.substring(0, s.length()-1)
+    if paramCount > WC3LIMIT_FUNCTIONS_PARAMETER_COUNT
+        error(WC3LIMIT_FUNCTIONS_PARAMETER_COUNT_ERROR)
+    return s
+
+/** Checks wheather a string is representing a digit or not.*/
+public function string.isDigit() returns bool
+    bool isDigit = false
+    for int i = 0 to this.length()-1
+        if this.charAt(i) == "0" or this.charAt(i) == "1" or this.charAt(i) == "2" or this.charAt(i) == "3" or this.charAt(i) == "4"
+        or this.charAt(i) == "5" or this.charAt(i) == "6" or this.charAt(i) == "7" or this.charAt(i) == "8" or this.charAt(i) == "9"
+            isDigit = true
+        else
+            isDigit = false
+            return isDigit
+    return isDigit
+
+public function string.containsAllAndOnly(string chars) returns bool
+    bool containsAll = true
+    if this.length() == chars.length()
+        for char in chars
+            if not this.contains(char)
+                containsAll = false
+                break
+    else
+        containsAll = false
+    return containsAll
+
+/** Checks whether a string is valid in terms of max wc3 obj desc length.*/
+public function string.checkStringLength() returns string
+    if this.length() > WC3LIMIT_OBJECTS_DESCRIPTION_LENGTH
+        error("String |||"+this+"||| is too long. Length: "+this.length().toString())    
+    return this
+
+/** Replaces all occurences of a giving charlist by a specific repalcement char.*/
+public function string.replaceInvalidChars(string invalidCharset, string replacementChar) returns string
+    var newString = this
+    for invalidChar in invalidCharset
+        newString = newString.contains(invalidChar) ? newString.replace(invalidChar, replacementChar) : newString
+    return newString
+
+public function string.getIndexOfStringBeforePos(string lookup, int pos) returns int
+    return this.substring(0, pos).lastIndexOf(lookup)

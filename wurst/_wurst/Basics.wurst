@@ -4,6 +4,18 @@ import Player
 import NoWurst
 import Annotations
 
+/* TeveR Specific Basics */
+public constant integer INDEX_OF_LAST_PLAYER                = 19
+public constant integer MAX_PLAYERS                         = 20
+public constant integer MAX_PLAYERS_IN_DUNGEON              = 10
+public constant integer PLAYER_NEUTRAL_DUNGEON_BOSSES       = 20
+public constant integer PLAYER_NEUTRAL_ALLY                 = 21
+public constant integer PLAYER_SILVASIAS                    = PLAYER_NEUTRAL_ALLY
+public constant integer PLAYER_NEUTRAL_NONALLY              = PLAYER_NEUTRAL_PASSIVE // 27 == PLAYER_NOBODY
+public constant integer PLAYER_NPC                          = 22
+public constant integer PLAYER_NPC_AGGRESSIVE               = 23
+public constant integer PLAYER_NOBODY                       = 27
+
 /** Standard Period for animation.
 	  Note that 0.03125 is also possible, but doesn't work with order cancel from SetUnitPos */
 @configurable public constant ANIMATION_PERIOD   =  0.030
@@ -24,3 +36,11 @@ public constant GHOST_VIS_ID			= 'Aeth'
 public constant DUMMY_PLAYER 			= players[PLAYER_NEUTRAL_PASSIVE]
 /** Neutral Hostile (darkgreen) */
 public constant DUMMY_HOSTILE_PLAYER 	= players[PLAYER_NEUTRAL_AGGRESSIVE]
+
+// WC3 limitations constants
+public constant real    TIMER_MIN_DELAY                 = .03125
+public constant int     WC3LIMIT_OBJECTS_DESCRIPTION_LENGTH = 1023
+public constant int     WC3LIMIT_FUNCTIONS_PARAMETER_COUNT  = 31
+public constant int     WC3LIMIT_ARRAY_SIZE                 = 32768 // For arrays OUTSIDE of class, or static arrays in classes
+public constant int     WC3LIMIT_ARRAY_SIZE_IN_CLASS        = 3734 // Could be limited by other arrays as well? So total for single array might be different... Anyway careful with size of arrays in classes, it increases code size exponenitally!!!
+public constant string  WC3LIMIT_FUNCTIONS_PARAMETER_COUNT_ERROR = "Maximum number of parameters reached!"

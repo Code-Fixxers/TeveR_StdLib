@@ -1,0 +1,36 @@
+/*
+*   Name:           DestructableExtensions.wurst
+*   System:         General System
+*   Description:    This script serves for definition of serveral helper and enhanced usefull functions for destructables
+*   Author:         Alex
+*   Date:           22/01/2019
+*   Changed:        22/01/2019
+*   Changelog:      22/01/2019 - created this script
+*
+*/
+
+package DestructableExtensions
+
+/** used to toggles a destructable gate open close state*/
+public function destructable.toggleGate()
+    if GetDestructableLife(this) > 0
+        ModifyGateBJ(bj_GATEOPERATION_CLOSE, this)
+    else
+        ModifyGateBJ(bj_GATEOPERATION_OPEN, this)
+
+/** used to open a destructable gate*/
+public function destructable.openGate()
+    ModifyGateBJ(bj_GATEOPERATION_OPEN, this)
+
+/** used to close a destructable gate*/
+public function destructable.closeGate()
+    ModifyGateBJ(bj_GATEOPERATION_DESTROY, this)
+    ModifyGateBJ(bj_GATEOPERATION_CLOSE, this)
+
+/** used to move a destructable elevator one step up*/
+public function destructable.elevatorUp()
+    ChangeElevatorHeight(this, GetElevatorHeight(this)+1)
+
+/** used to move a destructable elevator one step down*/
+public function destructable.elevatorDown()
+    ChangeElevatorHeight(this, GetElevatorHeight(this)-1)
