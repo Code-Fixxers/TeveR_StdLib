@@ -1,0 +1,518 @@
+/*
+*   Name:           IntegerExtensions.wurst
+*   System:         Extensions
+*   Description:    This script serves for utility functions for bytes operations with intergers
+*   Author:         Alex
+*
+*/
+
+package IntegerExtensions
+
+int array lByteTable
+int array rByteTable
+int array sByteTable
+
+int array binaryTable
+// Offsets:
+// 0x000 = powers of 2 (up to 32)
+// 0x100 = AND
+// 0x200 = OR
+// 0x300 = XOR
+
+/** performs binary bitwise AND operation on 2 interger values */
+public function int.and32(int input) returns int
+    return _AND(this, input)
+
+/** performs binary bitwise OR operation on 2 interger values */
+public function int.or32(int input) returns int
+    return _OR(this, input)
+    
+/** performs binary bitwise XOR operation on 2 interger values */
+public function int.xor32(int input) returns int
+    return _XOR(this, input)
+
+/** return the left (high) byte of a two byte sized value */
+public function int.lByte() returns int
+    return lByteTable[this]
+
+/** return the right (high) byte of a two byte sized value */
+public function int.rByte() returns int
+    return rByteTable[this]
+
+/** performs binary bitwise and operation on 2 interger values which are sized of 2 bytes */
+public function int.byteAnd(int val) returns int
+    return this.lByte().sByteAnd(val.lByte()) * 0x10 + this.rByte().sByteAnd(val.rByte())
+
+/** return the sub byte of a two byte sized value for byte and operation */
+public function int.sByteAnd(int val) returns int
+    return sByteTable[this * 0x10 + val]
+    
+/** NOT operation on an integer */
+@inline
+function _NOT(int a) returns int
+    return -1 - a
+
+/** AND operationg on an integer */    
+function _AND(int _a, int _b) returns int
+    var a  = _a
+    var b  = _b
+    var ta = (a / 16).floor()
+    var tb = (b / 16).floor()
+
+    var x = binaryTable[0x100 + (a - ta * 16) + (b - tb * 16) * 16]
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+    x  = x + binaryTable[0x100 + (ta - a * 16) + (tb - b * 16) * 16] * 0x00000010
+    ta = (a / 16).floor()
+    tb = (b / 16).floor()
+    x  = x + binaryTable[0x100 + (a - ta * 16) + (b - tb * 16) * 16] * 0x00000100
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+    x  = x + binaryTable[0x100 + (ta - a * 16) + (tb - b * 16) * 16] * 0x00001000
+    ta = (a / 16).floor()
+    tb = (b / 16).floor()
+    x  = x + binaryTable[0x100 + (a - ta * 16) + (b - tb * 16) * 16] * 0x00010000
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+    x  = x + binaryTable[0x100 + (ta - a * 16) + (tb - b * 16) * 16] * 0x00100000
+    ta = (a / 16).floor()
+    tb = (b / 16).floor()
+    x  = x + binaryTable[0x100 + (a - ta * 16) + (b - tb * 16) * 16] * 0x01000000
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+
+    return x + binaryTable[0x100 + (ta - a * 16) + (tb - b * 16) * 16] * 0x10000000
+  
+/** OR operationg on an integer */    
+function _OR(int _a, int _b) returns int
+    var a  = _a
+    var b  = _b
+    var ta = (a / 16).floor()
+    var tb = (b / 16).floor()
+
+    var x = binaryTable[0x200 + (a - ta * 16) + (b - tb * 16) * 16]
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+    x  = x + binaryTable[0x200 + (ta - a * 16) + (tb - b * 16) * 16] * 0x00000010
+    ta = (a / 16).floor()
+    tb = (b / 16).floor()
+    x  = x + binaryTable[0x200 + (a - ta * 16) + (b - tb * 16) * 16] * 0x00000100
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+    x  = x + binaryTable[0x200 + (ta - a * 16) + (tb - b * 16) * 16] * 0x00001000
+    ta = (a / 16).floor()
+    tb = (b / 16).floor()
+    x  = x + binaryTable[0x200 + (a - ta * 16) + (b - tb * 16) * 16] * 0x00010000
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+    x  = x + binaryTable[0x200 + (ta - a * 16) + (tb - b * 16) * 16] * 0x00100000
+    ta = (a / 16).floor()
+    tb = (b / 16).floor()
+    x  = x + binaryTable[0x200 + (a - ta * 16) + (b - tb * 16) * 16] * 0x01000000
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+
+    return x + binaryTable[0x200 + (ta - a * 16) + (tb - b * 16) * 16] * 0x10000000
+
+function _XOR(int _a, int _b) returns int
+    var a  = _a
+    var b  = _b
+    var ta = (a / 16).floor()
+    var tb = (b / 16).floor()
+
+    var x = binaryTable[0x300 + (a - ta * 16) + (b - tb * 16) * 16]
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+    x  = x + binaryTable[0x300 + (ta - a * 16) + (tb - b * 16) * 16] * 0x00000010
+    ta = (a / 16).floor()
+    tb = (b / 16).floor()
+    x  = x + binaryTable[0x300 + (a - ta * 16) + (b - tb * 16) * 16] * 0x00000100
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+    x  = x + binaryTable[0x300 + (ta - a * 16) + (tb - b * 16) * 16] * 0x00001000
+    ta = (a / 16).floor()
+    tb = (b / 16).floor()
+    x  = x + binaryTable[0x300 + (a - ta * 16) + (b - tb * 16) * 16] * 0x00010000
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+    x  = x + binaryTable[0x300 + (ta - a * 16) + (tb - b * 16) * 16] * 0x00100000
+    ta = (a / 16).floor()
+    tb = (b / 16).floor()
+    x  = x + binaryTable[0x300 + (a - ta * 16) + (b - tb * 16) * 16] * 0x01000000
+    a  = (ta / 16).floor()
+    b  = (tb / 16).floor()
+
+    return x + binaryTable[0x300 + (ta - a * 16) + (tb - b * 16) * 16] * 0x10000000
+
+// shift left/right. DO NOT use negative values, this should get inlined as well
+@inline
+function _SHL (int a, int b) returns int
+    return a * binaryTable[b]
+
+@inline
+function _SHR (int a, int b) returns int
+    return (a / binaryTable[b]).floor()
+    
+// Init tables
+init 
+    initLeftByteTable()
+    initRightByteTable()
+    initSByteTable()
+    initBinaryTable()
+
+function initLeftByteTable()
+    var i16  = 0x0
+    var i256 = 0x0
+
+    while i256 < 0x100
+        for i = 0 to 0xF
+            lByteTable[i256] = i16
+            i256++
+        i16++
+
+function initRightByteTable()
+    var i256 = 0x0
+
+    while i256 < 0x100
+        for i16 = 0 to 0xF
+            rByteTable[i256] = i16
+            i256++
+
+function initSByteTable()
+    for i = 0x00 to 0x10
+        sByteTable[i] = 0x0
+    sByteTable[0x11] = 0x1
+    sByteTable[0x12] = 0x0
+    sByteTable[0x13] = 0x1
+    sByteTable[0x14] = 0x0
+    sByteTable[0x15] = 0x1
+    sByteTable[0x16] = 0x0
+    sByteTable[0x17] = 0x1
+    sByteTable[0x18] = 0x0
+    sByteTable[0x19] = 0x1
+    sByteTable[0x1a] = 0x0
+    sByteTable[0x1b] = 0x1
+    sByteTable[0x1c] = 0x0
+    sByteTable[0x1d] = 0x1
+    sByteTable[0x1e] = 0x0
+    sByteTable[0x1f] = 0x1
+    sByteTable[0x20] = 0x0
+    sByteTable[0x21] = 0x0
+    sByteTable[0x22] = 0x2
+    sByteTable[0x23] = 0x2
+    sByteTable[0x24] = 0x0
+    sByteTable[0x25] = 0x0
+    sByteTable[0x26] = 0x2
+    sByteTable[0x27] = 0x2
+    sByteTable[0x28] = 0x0
+    sByteTable[0x29] = 0x0
+    sByteTable[0x2a] = 0x2
+    sByteTable[0x2b] = 0x2
+    sByteTable[0x2c] = 0x0
+    sByteTable[0x2d] = 0x0
+    sByteTable[0x2e] = 0x2
+    sByteTable[0x2f] = 0x2
+    sByteTable[0x30] = 0x0
+    sByteTable[0x31] = 0x1
+    sByteTable[0x32] = 0x2
+    sByteTable[0x33] = 0x3
+    sByteTable[0x34] = 0x0
+    sByteTable[0x35] = 0x1
+    sByteTable[0x36] = 0x2
+    sByteTable[0x37] = 0x3
+    sByteTable[0x38] = 0x0
+    sByteTable[0x39] = 0x1
+    sByteTable[0x3a] = 0x2
+    sByteTable[0x3b] = 0x3
+    sByteTable[0x3c] = 0x0
+    sByteTable[0x3d] = 0x1
+    sByteTable[0x3e] = 0x2
+    sByteTable[0x3f] = 0x3
+    sByteTable[0x40] = 0x0
+    sByteTable[0x41] = 0x0
+    sByteTable[0x42] = 0x0
+    sByteTable[0x43] = 0x0
+    sByteTable[0x44] = 0x4
+    sByteTable[0x45] = 0x4
+    sByteTable[0x46] = 0x4
+    sByteTable[0x47] = 0x4
+    sByteTable[0x48] = 0x0
+    sByteTable[0x49] = 0x0
+    sByteTable[0x4a] = 0x0
+    sByteTable[0x4b] = 0x0
+    sByteTable[0x4c] = 0x4
+    sByteTable[0x4d] = 0x4
+    sByteTable[0x4e] = 0x4
+    sByteTable[0x4f] = 0x4
+    sByteTable[0x50] = 0x0
+    sByteTable[0x51] = 0x1
+    sByteTable[0x52] = 0x0
+    sByteTable[0x53] = 0x1
+    sByteTable[0x54] = 0x4
+    sByteTable[0x55] = 0x5
+    sByteTable[0x56] = 0x4
+    sByteTable[0x57] = 0x5
+    sByteTable[0x58] = 0x0
+    sByteTable[0x59] = 0x1
+    sByteTable[0x5a] = 0x0
+    sByteTable[0x5b] = 0x1
+    sByteTable[0x5c] = 0x4
+    sByteTable[0x5d] = 0x5
+    sByteTable[0x5e] = 0x4
+    sByteTable[0x5f] = 0x5
+    sByteTable[0x60] = 0x0
+    sByteTable[0x61] = 0x0
+    sByteTable[0x62] = 0x2
+    sByteTable[0x63] = 0x2
+    sByteTable[0x64] = 0x4
+    sByteTable[0x65] = 0x4
+    sByteTable[0x66] = 0x6
+    sByteTable[0x67] = 0x6
+    sByteTable[0x68] = 0x0
+    sByteTable[0x69] = 0x0
+    sByteTable[0x6a] = 0x2
+    sByteTable[0x6b] = 0x2
+    sByteTable[0x6c] = 0x4
+    sByteTable[0x6d] = 0x4
+    sByteTable[0x6e] = 0x6
+    sByteTable[0x6f] = 0x6
+    sByteTable[0x70] = 0x0
+    sByteTable[0x71] = 0x1
+    sByteTable[0x72] = 0x2
+    sByteTable[0x73] = 0x3
+    sByteTable[0x74] = 0x4
+    sByteTable[0x75] = 0x5
+    sByteTable[0x76] = 0x6
+    sByteTable[0x77] = 0x7
+    sByteTable[0x78] = 0x0
+    sByteTable[0x79] = 0x1
+    sByteTable[0x7a] = 0x2
+    sByteTable[0x7b] = 0x3
+    sByteTable[0x7c] = 0x4
+    sByteTable[0x7d] = 0x5
+    sByteTable[0x7e] = 0x6
+    sByteTable[0x7f] = 0x7
+    sByteTable[0x80] = 0x0
+    sByteTable[0x81] = 0x0
+    sByteTable[0x82] = 0x0
+    sByteTable[0x83] = 0x0
+    sByteTable[0x84] = 0x0
+    sByteTable[0x85] = 0x0
+    sByteTable[0x86] = 0x0
+    sByteTable[0x87] = 0x0
+    sByteTable[0x88] = 0x8
+    sByteTable[0x89] = 0x8
+    sByteTable[0x8a] = 0x8
+    sByteTable[0x8b] = 0x8
+    sByteTable[0x8c] = 0x8
+    sByteTable[0x8d] = 0x8
+    sByteTable[0x8e] = 0x8
+    sByteTable[0x8f] = 0x8
+    sByteTable[0x90] = 0x0
+    sByteTable[0x91] = 0x1
+    sByteTable[0x92] = 0x0
+    sByteTable[0x93] = 0x1
+    sByteTable[0x94] = 0x0
+    sByteTable[0x95] = 0x1
+    sByteTable[0x96] = 0x0
+    sByteTable[0x97] = 0x1
+    sByteTable[0x98] = 0x8
+    sByteTable[0x99] = 0x9
+    sByteTable[0x9a] = 0x8
+    sByteTable[0x9b] = 0x9
+    sByteTable[0x9c] = 0x8
+    sByteTable[0x9d] = 0x9
+    sByteTable[0x9e] = 0x8
+    sByteTable[0x9f] = 0x9
+    sByteTable[0xa0] = 0x0
+    sByteTable[0xa1] = 0x0
+    sByteTable[0xa2] = 0x2
+    sByteTable[0xa3] = 0x2
+    sByteTable[0xa4] = 0x0
+    sByteTable[0xa5] = 0x0
+    sByteTable[0xa6] = 0x2
+    sByteTable[0xa7] = 0x2
+    sByteTable[0xa8] = 0x8
+    sByteTable[0xa9] = 0x8
+    sByteTable[0xaa] = 0xa
+    sByteTable[0xab] = 0xa
+    sByteTable[0xac] = 0x8
+    sByteTable[0xad] = 0x8
+    sByteTable[0xae] = 0xa
+    sByteTable[0xaf] = 0xa
+    sByteTable[0xb0] = 0x0
+    sByteTable[0xb1] = 0x1
+    sByteTable[0xb2] = 0x2
+    sByteTable[0xb3] = 0x3
+    sByteTable[0xb4] = 0x0
+    sByteTable[0xb5] = 0x1
+    sByteTable[0xb6] = 0x2
+    sByteTable[0xb7] = 0x3
+    sByteTable[0xb8] = 0x8
+    sByteTable[0xb9] = 0x9
+    sByteTable[0xba] = 0xa
+    sByteTable[0xbb] = 0xb
+    sByteTable[0xbc] = 0x8
+    sByteTable[0xbd] = 0x9
+    sByteTable[0xbe] = 0xa
+    sByteTable[0xbf] = 0xb
+    sByteTable[0xc0] = 0x0
+    sByteTable[0xc1] = 0x0
+    sByteTable[0xc2] = 0x0
+    sByteTable[0xc3] = 0x0
+    sByteTable[0xc4] = 0x4
+    sByteTable[0xc5] = 0x4
+    sByteTable[0xc6] = 0x4
+    sByteTable[0xc7] = 0x4
+    sByteTable[0xc8] = 0x8
+    sByteTable[0xc9] = 0x8
+    sByteTable[0xca] = 0x8
+    sByteTable[0xcb] = 0x8
+    sByteTable[0xcc] = 0xc
+    sByteTable[0xcd] = 0xc
+    sByteTable[0xce] = 0xc
+    sByteTable[0xcf] = 0xc
+    sByteTable[0xd0] = 0x0
+    sByteTable[0xd1] = 0x1
+    sByteTable[0xd2] = 0x0
+    sByteTable[0xd3] = 0x1
+    sByteTable[0xd4] = 0x4
+    sByteTable[0xd5] = 0x5
+    sByteTable[0xd6] = 0x4
+    sByteTable[0xd7] = 0x5
+    sByteTable[0xd8] = 0x8
+    sByteTable[0xd9] = 0x9
+    sByteTable[0xda] = 0x8
+    sByteTable[0xdb] = 0x9
+    sByteTable[0xdc] = 0xc
+    sByteTable[0xdd] = 0xd
+    sByteTable[0xde] = 0xc
+    sByteTable[0xdf] = 0xd
+    sByteTable[0xe0] = 0x0
+    sByteTable[0xe1] = 0x0
+    sByteTable[0xe2] = 0x2
+    sByteTable[0xe3] = 0x2
+    sByteTable[0xe4] = 0x4
+    sByteTable[0xe5] = 0x4
+    sByteTable[0xe6] = 0x6
+    sByteTable[0xe7] = 0x6
+    sByteTable[0xe8] = 0x8
+    sByteTable[0xe9] = 0x8
+    sByteTable[0xea] = 0xa
+    sByteTable[0xeb] = 0xa
+    sByteTable[0xec] = 0xc
+    sByteTable[0xed] = 0xc
+    sByteTable[0xee] = 0xe
+    sByteTable[0xef] = 0xe
+    sByteTable[0xf0] = 0x0
+    sByteTable[0xf1] = 0x1
+    sByteTable[0xf2] = 0x2
+    sByteTable[0xf3] = 0x3
+    sByteTable[0xf4] = 0x4
+    sByteTable[0xf5] = 0x5
+    sByteTable[0xf6] = 0x6
+    sByteTable[0xf7] = 0x7
+    sByteTable[0xf8] = 0x8
+    sByteTable[0xf9] = 0x9
+    sByteTable[0xfa] = 0xa
+    sByteTable[0xfb] = 0xb
+    sByteTable[0xfc] = 0xc
+    sByteTable[0xfd] = 0xd
+    sByteTable[0xfe] = 0xe
+    sByteTable[0xff] = 0xf
+
+function initBinaryTable()
+    int a
+    int b
+    int ta
+    int tb
+
+    for i = 0 to 254
+        a  = (i / 16).floor()
+        b  = i - a * 16
+        ta = a - (a / 2).floor() * 2
+        tb = b - (b / 2).floor() * 2
+        binaryTable[0x100 + i] = ta * tb
+        binaryTable[0x200 + i] = ta + tb - ta * tb
+        binaryTable[0x300 + i] = ta + tb - 2 * ta * tb
+        a  = (a / 2).floor()
+        b  = (b / 2).floor()
+        ta = a - (a / 2).floor() * 2
+        tb = b - (b / 2).floor() * 2
+        binaryTable[0x100 + i] = binaryTable[0x100 + i] + 2 * (ta * tb)
+        binaryTable[0x200 + i] = binaryTable[0x200 + i] + 2 * (ta + tb - ta * tb)
+        binaryTable[0x300 + i] = binaryTable[0x300 + i] + 2 * (ta + tb - 2 * ta * tb)
+        a  = (a / 2).floor()
+        b  = (b / 2).floor()
+        ta = a - (a / 2).floor() * 2
+        tb = b - (b / 2).floor() * 2
+        binaryTable[0x100 + i] = binaryTable[0x100 + i] + 4 * (ta * tb)
+        binaryTable[0x200 + i] = binaryTable[0x200 + i] + 4 * (ta + tb - ta * tb)
+        binaryTable[0x300 + i] = binaryTable[0x300 + i] + 4 * (ta + tb - 2 * ta * tb)
+        ta = (a / 2).floor()
+        tb = (b / 2).floor()
+        binaryTable[0x100 + i] = binaryTable[0x100 + i] + 8 * (ta * tb)
+        binaryTable[0x200 + i] = binaryTable[0x200 + i] + 8 * (ta + tb - ta * tb)
+        binaryTable[0x300 + i] = binaryTable[0x300 + i] + 8 * (ta + tb - 2 * ta * tb)
+
+    binaryTable[0] = 1
+    for i = 1 to 31
+        binaryTable[i] = binaryTable[i - 1] * 2
+
+// test functions
+@test function testLByte()
+    initLeftByteTable()
+
+    let val      = 150      // 1001 0110
+    let expected =   9      // 1001
+    
+    val.lByte().assertEquals(expected)
+
+@test function testRByte()
+    initRightByteTable()
+
+    let val      = 150      // 1001 0110
+    let expected =   6      //      0110
+    
+    val.rByte().assertEquals(expected)
+
+@test function testByteAnd()
+    initLeftByteTable()
+    initRightByteTable() 
+    initSByteTable()       
+
+    let val1     = 11       // 1011
+    let val2     = 6        // 0110
+    let expected = 2        // 0010
+
+    val1.byteAnd(val2).assertEquals(expected)
+
+
+@test function test32And()
+    initBinaryTable()
+
+    let val1     = 153      // 1001 1001
+    let val2     = 163      // 1010 0011
+    let expected = 129      // 1000 0001
+  
+    val1.and32(val2).assertEquals(expected)
+
+    
+@test function test32Or()
+    initBinaryTable()
+
+    let val1     = 153      // 1001 1001
+    let val2     = 163      // 1010 0011
+    let expected = 187      // 1011 1011
+
+    val1.or32(val2).assertEquals(expected)
+
+
+@test function test32Xor()
+    initBinaryTable()
+
+    let val1     = 153      // 1001 1001
+    let val2     = 163      // 1010 0011
+    let expected =  58      // 0011 1010
+
+    val1.xor32(val2).assertEquals(expected)

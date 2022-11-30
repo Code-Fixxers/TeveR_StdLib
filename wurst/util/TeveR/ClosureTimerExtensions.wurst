@@ -1,0 +1,122 @@
+/*
+*   Name:           ClosureTimerExtensions.wurst
+*   System:         Extensions
+*   Description:    This script serves for definition of serveral helper and enhanced usefull functions for timers
+*   Author:         Alex
+*/
+
+package ClosureTimerExtensions
+
+import public TimerUtils
+import public ClosureTimers
+
+/** used as callback to get call from outside, but does not get deleted on call, like it does for CallbackSingle in ClosureTimers **/
+public abstract class CallbackSingleNoAutoDestroy
+    private int userData
+    private timer t
+    abstract function call()
+
+    function start(real time)
+        t = getTimer()
+        ..setData(this castTo int)
+        ..start(time, () -> staticCallback())		
+    
+    function destroyMe()
+        destroy this
+    
+    function setUserData(int data)
+        this.userData = data
+
+    function getUserData() returns int
+        return this.userData
+        
+    private static function staticCallback()
+        let t  = GetExpiredTimer()
+        let cb = t.getData() castTo thistype
+        cb.call()
+    
+    ondestroy
+        if t != null
+            t.release()
+
+/** used as callback to get call from outside, but does not get deleted on call, like it does for CallbackCounted in ClosureTimers **/
+public abstract class CallbackCountedNoAutoDestroy
+    private var count = 0
+    private timer t
+    private CallbackSingle finishedCallback
+    
+    protected abstract function call(thistype cb)
+
+    function start(real time, int callAmount, CallbackSingle cb)
+        this.finishedCallback = cb
+        this.t = getTimer()
+        t.setData(this castTo int)
+        count = callAmount
+        t.startPeriodic(time, function staticCallback)
+        
+    function isLast() returns boolean
+        return count == 1
+        
+    function getCount() returns int
+        return count
+        
+    function stop()
+        count = 0
+        
+    private static function staticCallback()
+        (GetExpiredTimer().getData() castTo thistype).callAndCount()
+        
+    private function callAndCount()
+        if count > 0
+            call(this)
+            count--
+        else
+            if this.finishedCallback != null
+                this.finishedCallback.call()
+            t.pause()
+        
+    ondestroy
+        t.release()
+
+/** used as callback to get call from outside, and allows setting ad getting of the period time used **/
+public abstract class CallbackMutablePeriodic
+    private timer t
+    private real period
+
+    protected abstract function call(thistype cb)
+
+    function setPeriod(real time)
+        this.period = time
+        this.t..setData(this castTo int)
+        ..startPeriodic(time, function staticCallback)
+
+    function getPeriod() returns real
+        return this.period    
+
+    protected function start(timer whichTimer, real time)
+        this.t = whichTimer
+        this.setPeriod(time)
+
+    private static function staticCallback()
+        let cb = (GetExpiredTimer().getData() castTo thistype)
+        cb.call(cb)
+
+    ondestroy
+        this.t.release()
+
+/** execute an action periodically, with a limited amount of calls 
+The callback object is NOT auto destroyed after the action has been executed callAmount times.**/
+public function doPeriodicallyCountedNoAutoDestroy(real time, int callAmount, CallbackSingle finishedCallback, CallbackCountedNoAutoDestroy cb_periodic) returns CallbackCountedNoAutoDestroy
+    cb_periodic.start(time, callAmount, finishedCallback)
+    return cb_periodic
+
+/** execute an action after delay
+The callback object is NOT auto destroyed after the action has been executed.**/
+public function doAfterNoAutoDestroy(real timeToWait, CallbackSingleNoAutoDestroy cb) returns CallbackSingleNoAutoDestroy
+    cb.start(timeToWait)
+    return cb
+    
+/** execute an action periodically, the callback is mutable and the period  can be changed with .setPeriod **/
+public function doPeriodicallyMutable(real time, CallbackMutablePeriodic cb_periodic) returns CallbackMutablePeriodic
+    cb_periodic.start(getTimer(), time)
+    return cb_periodic

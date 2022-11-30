@@ -1,0 +1,29 @@
+package LinkedListExtensions
+
+import LinkedList
+
+/** used to properly remove linkedlist*/
+public function LinkedList<T>.removeSelf<T>()       // not yet used needs testing
+    this.clear()
+    destroy this
+
+public function LinkedList<T>.getLast<T>() returns T
+    T elem = null
+    if this.size() > 0
+        elem = this.get(this.size()-1)
+    return elem
+
+public function LinkedList<string>.addStringLines(StringLines stringLines) // FIXME: This can potentially crash over long time, if the StringLines overflow?
+    for s in stringLines
+        this.add(s)
+    destroy stringLines
+    
+/** This returns strings as separate lines between given indexes. Returns empty string if wrong indexes are supplied*/
+public function LinkedList<string>.get(int indexStart, int indexEnd) returns string
+    var s = ""
+    if indexEnd >= this.size() or indexStart >= this.size() or indexStart > indexEnd
+        return s
+    else
+        for int i = indexStart to indexEnd
+            s += this.get(i) + (i == indexEnd ? "" : "\n")
+    return s

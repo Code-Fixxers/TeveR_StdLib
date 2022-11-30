@@ -1,0 +1,362 @@
+package VectorExtensions
+
+import public GroupUtils
+import MapBounds
+import GroupExtensions
+import ClosureTimers
+
+public tuple lineFormular(real m, real b)
+
+/** return f(x) for a given point on a line)*/
+public function real.getYOnLine(lineFormular line) returns real
+    return (line.m * this) + line.b
+
+/** return f(y) for a given point on a line)*/
+public function real.getXOnLine(lineFormular line) returns real
+    return (this-line.b)/line.m
+
+/** returns the line formular for 2 givend points */
+public function vec2.getLineFormular(vec2 p) returns lineFormular
+    return lineFormular((p.y-this.y)/(p.x-this.x), ((p.x*this.y)-(this.x*p.y))/(p.x-this.x))
+
+/** returns a parallel line with a giving getParallelLineWithOrthognalDistance(d) distance ot the original line */
+public function lineFormular.getParallelLineWithOrthognalDistance(real d) returns lineFormular
+    return lineFormular(this.m, (this.b + d*SquareRoot(1+Pow(this.m, 2))))
+
+/** returns a side point to a line with a specific distance*/
+public function vec2.getOrthognalSidePoint(lineFormular line, real d) returns vec2
+    let m          = -1/(line.m)
+    let b          = this.y-(m*this.x)
+    let orthLine   = lineFormular(m, b)
+    let targetLine = line.getParallelLineWithOrthognalDistance(d) 
+
+    let x = (orthLine.b - targetLine.b) / (targetLine.m - orthLine.m)
+    let y = targetLine.m * x + targetLine.b
+
+    return vec2(x, y)
+
+/** used to cast rect to region ! caution regions needs to be cleaned/destroyed after usage !*/
+public function rect.toRegion() returns region
+    let reg = CreateRegion()
+    RegionAddRect(reg, this)
+    return reg
+
+/** used to create a rect based on center x y pos and x y size*/
+public function rect.fromCenter(real sizeX, real sizeY) returns rect
+    let c = this.getCenter()
+    return Rect(c.x-sizeX/2,c.y-sizeY/2,c.x+sizeX/2,c.y+sizeY/2)
+
+/** used to create a rect based on center x y pos and x y size and and offset vector*/
+public function rect.fromCenterWithOffset(real sizeX, real sizeY, vec2 offset) returns rect
+    let c = this.getCenter()+offset
+    return Rect(c.x-sizeX/2,c.y-sizeY/2,c.x+sizeX/2,c.y+sizeY/2)
+
+/** used to cast location to vec2 */ 
+public function vec2.toLocation() returns location
+    return Location(this.x, this.y)
+
+/** returns the facing angle between 2 vec2*/
+public function vec2.getFacingTowards(vec2 b) returns angle
+    return angle(Atan2(b.y - this.y, b.x - this.x))
+
+/** used to cast vec2 to location */
+public function location.toVec2() returns vec2
+    return vec2(GetLocationX(this), GetLocationY(this))
+
+/** used to properly remove locations*/
+public function location.remove()
+    RemoveLocation(this)
+
+/** used to get units in range of the loc ! caution group needs to be released using group.release() or destroyed after usage !*/
+public function vec2.getUnitsInRange(real range) returns group 
+    let g = getGroup()
+    GroupEnumUnitsInRange(g, this.x, this.y, range, null)
+    return g
+
+/** used to get units in range of the loc, removing caster from the group ! caution group needs to be released using group.release() or destroyed after usage !*/
+public function vec2.getUnitsInRange(real range, unit caster) returns group 
+    let g = this.getUnitsInRange(range)
+    if caster != null
+        g.remove(caster)
+    return g
+
+/** used to get units in range of the loc which are enemies of caster. caution group needs to be released using group.release() or destroyed after usage ! */
+public function vec2.getEnemiesInRange(real range, unit caster) returns group
+    let g = this.getUnitsInRange(range, caster)
+    for u in g
+        if not u.isEnemyOf(caster)
+            g.remove(u)
+    return g
+
+/** used to get closest enemy unit in range of the vec2*/
+public function vec2.getClosestEnemyInRange(real range, unit caster, bool onlyTargetable) returns unit
+    let g = this.getUnitsInRange(range)
+
+    var closestDist = REAL_MAX
+    unit closestUnit = null
+
+    if caster != null
+        for u in g
+            if u != caster and u.isEnemyOf(caster) and (not onlyTargetable or (u.isAlive() and not u.isInvulnerable() and not u.isPaused()))
+                if closestDist > u.getPos().distanceTo(this)
+                    closestDist = u.getPos().distanceTo(this)
+                    closestUnit = u
+    return closestUnit
+
+/** used to get units in range of the loc between min and max range ! caution group needs to be released using group.release() after usage !*/
+public function vec2.getUnitsInRangeEx(real minRange, real maxRange) returns group 
+    let g = getGroup()
+    GroupEnumUnitsInRange(g, this.x, this.y, maxRange, null)
+    for u in g
+        if u.getPos().distanceTo(this) < minRange
+            g.remove(u)
+    return g
+
+/** Use this function only inside triggered code, otherwise it will not work!*/
+public function getSpellTargetVec() returns vec2
+    return vec2(GetSpellTargetX(),GetSpellTargetY())
+
+/** used to get units in rect ! caution group needs to be released using group.release() after usage !*/
+public function rect.getUnitsInRect() returns group
+    let g = getGroup()
+    GroupEnumUnitsInRect(g, this, null)
+    return g
+
+/** used to get units in rect with filter ! caution group needs to be released using group.release() or destroyed after usage !*/
+public function rect.getUnitsInRect(boolexpr filter) returns group
+    let g = getGroup()
+    GroupEnumUnitsInRect(g, this, filter)
+    filter.destr()
+    return g
+    
+/** used to get units in rect without these from a speicifc player id ! caution group needs to be released using group.release() after usage !*/
+public function rect.getUnitsInRectExcept(int pId) returns group
+    let units = this.getUnitsInRect()
+    for u in units
+        if u.getOwner().getId() == pId
+            units.remove(u)
+    return units
+
+/** used to get units in rect without these from a speicifc player id ! caution group needs to be released using group.release() after usage !*/
+public function rect.getUnitsInRectExcept(int pId1, int pId2) returns group
+    let units = this.getUnitsInRect()
+    for u in units
+        if u.getOwner().getId() == pId1 or u.getOwner().getId() == pId2
+            units.remove(u)
+    return units
+
+/** used to get units in rect but only these from a specific player id ! caution group needs to be released using group.release() after usage !*/
+public function rect.getUnitsInRectOnly(int pId) returns group
+    let units = this.getUnitsInRect()
+    for u in units
+        if u.getOwner().getId() != pId
+            units.remove(u)
+    return units
+
+/** used to get units in rect but only these from a specific UnitsInRangeTargetType */
+public function rect.getUnitInRectWithType(UnitsInRangeTargetTypes targetType, unit only_enemy, int only_pId) returns unit
+    let units = this.getUnitsInRect()
+    let target = units.filterUnitByTargetType(targetType, only_enemy, only_pId)
+    units.release()
+    return target
+
+/** used to get units in range of the loc but only these from a specific UnitsInRangeTargetType */
+public function vec2.getUnitInRangeWithType(real range, UnitsInRangeTargetTypes targetType, unit only_enemy, int only_pId) returns unit
+    let units = this.getUnitsInRange(range)
+    let target = units.filterUnitByTargetType(targetType, only_enemy, only_pId)
+    units.release()
+    return target
+
+/** used to get units in range of the loc between min and max range but only these from a speicifc UnitsInRangeTargetType */
+public function vec2.getUnitInRangeExWithType(real minRange, real maxRange, UnitsInRangeTargetTypes targetType, unit only_enemy, int only_pId) returns unit
+    let units = this.getUnitsInRangeEx(minRange, maxRange)
+    let target = units.filterUnitByTargetType(targetType, only_enemy, only_pId)
+    units.release()
+    return target
+
+function group.filterUnitByTargetType(UnitsInRangeTargetTypes targetType, unit only_enemy, int only_pId) returns unit
+    unit target = null
+    this.filterAliveUnits(only_enemy, only_pId)
+    
+    switch(targetType)
+        case Random
+            target = this.getRandom()
+        case LowestHP
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getHP() < tmp
+                    tmp = u.getHP()
+                    target = u   
+        case LowestMaxHP
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getMaxHP() < tmp
+                    tmp = u.getMaxHP()
+                    target = u   
+        case LowestMP
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getMana() < tmp
+                    tmp = u.getMana()
+                    target = u   
+        case LowestMaxMP
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getMaxMana() < tmp
+                    tmp = u.getMaxMana()
+                    target = u   
+        case LowestArmor
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getArmor() < tmp
+                    tmp = u.getArmor()
+                    target = u   
+        case HighestHP
+            var tmp = 0.
+            for u in this
+                if u.getHP() > tmp
+                    tmp = u.getHP()
+                    target = u   
+        case HighestMaxHP
+            var tmp = 0.
+            for u in this
+                if u.getMaxHP() > tmp
+                    tmp = u.getMaxHP()
+                    target = u
+        case HighestMP
+            var tmp = 0.
+            for u in this
+                if u.getMana() > tmp
+                    tmp = u.getMana()
+                    target = u
+        case HighestMaxMP
+            var tmp = 0.
+            for u in this
+                if u.getMaxMana() > tmp
+                    tmp = u.getMaxMana()
+                    target = u
+        case HighestArmor
+            var tmp = 0.
+            for u in this
+                if u.getArmor() > tmp
+                    tmp = u.getArmor()
+                    target = u 
+        case Slowest
+            var tmp = INT_MAX.toReal()
+            for u in this
+                if u.getMoveSpeed() < tmp
+                    tmp = u.getMoveSpeed()
+                    target = u 
+        case Fastest
+            var tmp = 0.
+            for u in this
+                if u.getMoveSpeed() > tmp
+                    tmp = u.getMoveSpeed()
+                    target = u 
+    return target
+
+public function rect.getRandomVecInRect() returns vec2
+    return vec2(GetRandomReal(GetRectMinX(this), GetRectMaxX(this)), GetRandomReal(GetRectMinY(this), GetRectMaxY(this)))
+
+public function rect.debugBoundaries(real duration)
+    let l0 = addLightning("DBRC", false, this.getRightBot(), this.getLeftBot())..setColor(color(0, 255, 0))
+    let l1 = addLightning("DBRC", false, this.getRightTop(), this.getLeftTop())..setColor(color(0, 255, 0))
+    let l2 = addLightning("DBRC", false, this.getLeftBot(), this.getLeftTop())..setColor(color(0, 255, 0))
+    let l3 = addLightning("DBRC", false, this.getRightBot(), this.getRightTop())..setColor(color(0, 255, 0))
+    if duration > 0
+        doAfter(duration) ->
+            l0.destr()
+            l1.destr()
+            l2.destr()
+            l3.destr()
+    
+/** addes a special effect to a target loc an returns it*/
+public function location.addSpecialEffect(string model) returns effect
+    return AddSpecialEffectLoc(model, this)
+    
+public tuple fourPointTuple(vec2 p1, vec2 p2, vec2 p3, vec2 p4)
+
+/** checks if a vec2 is crossing some border lines*/
+public function vec2.isCrossingLine(vec2 vi, vec2 vj) returns bool
+    return (vi.y > this.y) != (vj.y > this.y) and this.x < (vj.x - vi.x ) * (this.y - vi.y) / (vj.y - vi.y) + vi.x
+
+/** checks if a specific vec2 is inside of the fourPointTuple using ray casting algorithm **/
+public function fourPointTuple.isPointInside(vec2 p) returns boolean
+    var isInside = false
+    
+    if (p.x < this.getMinX() or p.x > this.getMaxX() or p.y < this.getMinY() or p.y > this.getMaxY())
+        return false
+
+    // from http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+    // in short we are generating a ray from outside the polygon going through are point wer are searching for (the position of the unit)
+    // and then count the amount of border crossing this ray has produced, the borders are obtained via point1 -> point2, point2 -> point3, .., point_last -> point1 
+        
+    var vi = this.p1
+    var vj = this.p4
+    if p.isCrossingLine(vi, vj)
+        isInside = not isInside
+    
+    vi = this.p2
+    vj = this.p1
+    if p.isCrossingLine(vi, vj)
+        isInside = not isInside
+
+    vi = this.p3
+    vj = this.p2
+    if p.isCrossingLine(vi, vj)
+        isInside = not isInside
+
+    vi = this.p4
+    vj = this.p3
+    if p.isCrossingLine(vi, vj)
+        isInside = not isInside
+
+    return isInside
+
+public function fourPointTuple.getMinX() returns real
+    var minx = boundMax.x
+    if this.p1.x < minx
+        minx = this.p1.x
+    if this.p2.x < minx
+        minx = this.p2.x
+    if this.p3.x < minx
+        minx = this.p3.x
+    if this.p4.x < minx
+        minx = this.p4.x
+    return minx
+
+public function fourPointTuple.getMinY() returns real
+    var miny = boundMax.y
+    if this.p1.y < miny
+        miny = this.p1.y
+    if this.p2.y < miny
+        miny = this.p2.y
+    if this.p3.y < miny
+        miny = this.p3.y
+    if this.p4.y < miny
+        miny = this.p4.y
+    return miny
+
+public function fourPointTuple.getMaxX() returns real
+    var maxx = boundMin.x
+    if this.p1.x > maxx
+        maxx = this.p1.x
+    if this.p2.x > maxx
+        maxx = this.p2.x
+    if this.p3.x > maxx
+        maxx = this.p3.x
+    if this.p4.x > maxx
+        maxx = this.p4.x
+    return maxx
+
+public function fourPointTuple.getMaxY() returns real
+    var maxy = boundMin.y
+    if this.p1.y > maxy
+        maxy = this.p1.y
+    if this.p2.y > maxy
+        maxy = this.p2.y
+    if this.p3.y > maxy
+        maxy = this.p3.y
+    if this.p4.y > maxy
+        maxy = this.p4.y
+    return maxy

@@ -1,0 +1,89 @@
+package NumberExtensions
+
+/** used to cast real to int and again to string*/
+public function real.toIntToString() returns string
+    return I2S(R2I(this))      
+
+/** gives you true with x% chance*/
+public function _GetRandomChanceX(int chance) returns bool
+    return GetRandomInt(1, 100) > (100-chance)
+
+/** gives you true with x% chance*/
+public function _GetRandomChanceReal(real chance) returns bool
+    return GetRandomReal(0, 1) > (1-chance)
+    
+/** used to get a random int but exluding a specific int value*/
+public function int.getRandomIntEx(int lowBound, int highBound, int retries) returns int
+    int val = lowBound-1
+    while (val < lowBound or val == this) and retries > 0
+        val = GetRandomInt(lowBound, highBound)
+
+    return ((retries <= 0 or val == this or val < lowBound)? lowBound-1 : val)
+
+public tuple randomRolls(int lastRoll, string listOfRolls)
+function getRandomArrayShuffled(int min, int max) returns string
+    integer array _arr
+    for int i = min to max
+        _arr[i] = i
+
+    // Now shuffle the _array
+    if min != 0 and max != 95 // numbers used during @Test
+        SetRandomSeed(GetRandomInt(0, INT_MAX-100))
+    for int j = min to max
+        let r = GetRandomInt(min, max)
+        let source = _arr[j]
+        let target = _arr[r]
+        
+        _arr[r] = source
+        _arr[j] = target
+            
+    var aPreview = ""
+    for int k = min to max
+        let next = _arr[k].toString()
+        aPreview += (next.length() == 1 ? "00" : (next.length() == 2 ? "0" : "")) +next + ","//(k == max ? "" : ",")
+    //print(aPreview)
+    return aPreview
+
+/** Return a tuple of last roll and list of remaining rolls.
+If provided list of rolls is empty, new one is generated automatically.
+Takes:  listOfRolls - remaining list of rolls, if you have non, simply provide empty string
+        min - low bound of random, cannot be <0
+        max - high bound of random, cannot be > 999 (unless function updated)*/
+public function getRandomRoll(string listOfRolls, int min, int max) returns randomRolls
+    let newlistOfRolls = listOfRolls == "" ? getRandomArrayShuffled(min,max) : listOfRolls.substring(4)
+    let roll = newlistOfRolls.substring(0, 3).toInt()
+    return randomRolls(roll, newlistOfRolls)
+
+/** Custom Function for mapping data values */
+public function _MapData(int value, int fromLow, int fromHigh, int toLow, int toHigh) returns int
+    let slope = (toHigh - toLow) / (fromHigh - fromLow)
+    return (toLow + slope * (value - fromLow)).round()
+
+/** Custom Function for mapping data values */
+public function _MapData(real value, real fromLow, real fromHigh, real toLow, real toHigh) returns real
+    let slope = (toHigh - toLow) / (fromHigh - fromLow)
+    return toLow + slope * (value - fromLow)
+
+@Test function testGetRandomArrayShuffled()
+    let min = 0
+    let max = 95
+    var rl = randomRolls(-1, "")
+    var originalString = ""
+
+    var aPreview = ""
+    for int k = min to max
+        rl = getRandomRoll(rl.listOfRolls, min, max)
+        if k == min
+            originalString = rl.listOfRolls
+        aPreview += (rl.lastRoll.toString().length() == 1 ? "00" : (rl.lastRoll.toString().length() == 2 ? "0" : "")) + rl.lastRoll.toString() + ","//(k == max ? "" : ",")
+    //print(aPreview)
+    assertTrue(aPreview == originalString)
+
+@Test function testMapDatareal()
+    (_MapData(0., 0., 1700., -145., -225.) == -145.).assertTrue()
+    (_MapData(1500., 0., 1700., -145., -225.) == -215.58823).assertTrue()
+    (_MapData(1., 0., 1700., -145., -225.) == -145.04706).assertTrue()
+    (_MapData(1700., 0., 1700., -145., -225.) == -225.).assertTrue()
+    
+    (_MapData(1, 1, MAX_PLAYERS, 0, 0) == 0).assertTrue()
+    //_MapData(playersInZone, 1, this.maxPlayersInPool, this.minActivePools, this.maxActivePools)

@@ -1,0 +1,31 @@
+/*
+*   Name:           HashMapExtensions.wurst
+*   System:         General System
+*   Description:    This script serves for definition of serveral helper and enhanced usefull functions for hashmaps
+*   Author:         Alex
+*   Date:           04/08/2018
+*   Changed:        04/08/2018
+*   Changelog:      04/08/2018 - created this script
+*
+*/
+
+package HashMapExtensions
+
+import HashMap
+
+/** Custom Function to search for for value of generic type inside a hashmap with keys of type int ! caution this is not very efficient when int index is used with handleids or large ints ! */
+public function HashMap<int, T2>.lookUp<T1, T2>(T2 value) returns int
+    int index = -1
+    int i     =  0
+    
+    while this.has(i) and index == -1
+        if this.get(i) == value
+            index = i
+        i += 1
+    return index
+
+
+/** used to properly remove hashmaps*/
+public function HashMap<T1, T2>.removeSelf<T1, T2>()       // not yet used needs testing
+    this.flush()
+    destroy this
