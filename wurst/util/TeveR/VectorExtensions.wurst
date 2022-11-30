@@ -165,6 +165,7 @@ public function vec2.getUnitInRangeExWithType(real minRange, real maxRange, Unit
     units.release()
     return target
 
+// TODO: Add this function using TUnits
 function group.filterUnitByTargetType(UnitsInRangeTargetTypes targetType, unit only_enemy, int only_pId) returns unit
     unit target = null
     this.filterAliveUnits(only_enemy, only_pId)
