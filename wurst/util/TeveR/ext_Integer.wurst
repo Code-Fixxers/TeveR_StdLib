@@ -6,7 +6,7 @@
 *
 */
 
-package IntegerExtensions
+package ext_Integer
 
 int array lByteTable
 int array rByteTable

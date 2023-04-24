@@ -409,6 +409,12 @@ public class LinkedList<T>
 		destroy entry
 		size--
 
+	
+	/** used to properly remove linkedlist*/
+	function removeSelf()       // not yet used needs testing
+		this.clear()
+		destroy this
+
 	ondestroy
 		if staticItr != null
 			destroy staticItr

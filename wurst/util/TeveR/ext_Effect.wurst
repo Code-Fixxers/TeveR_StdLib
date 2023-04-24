@@ -5,12 +5,10 @@
 *   Author:         Alex
 */
 
-package EffectExtensions
+package ext_Effect
 
 import MapBounds
 import ClosureTimers
-
-constant string JOB_CHANGE_FX_PATH = "Objects\\Spawnmodels\\Other\\ToonBoom\\ToonBoom.mdl"
 
 /** used to properly remove effects timed*/
 public function effect.destrTimed(real time)
@@ -36,13 +34,14 @@ public function effect.destrAdv()
 public tuple attachmentpoints(string atp0, string atp1, string atp2, string atp3, string atp4, string atp5)
 
 // ============================================================================
-public class FX
+/** This class is meant to be only a model for your own "FX" class. */
+public class FX_Base
 
     static function createEffect(string effectPath, vec2 pos) returns effect
         return AddSpecialEffect(effectPath, pos.x, pos.y)
 
     static function createEffect(string effectPath, vec3 pos) returns effect
-        let fx = FX.createEffect(effectPath, vec2(pos.x, pos.y))
+        let fx = FX_Base.createEffect(effectPath, vec2(pos.x, pos.y))
         fx.setZ(pos.z)
         return fx
 
@@ -50,7 +49,7 @@ public class FX
         return AddSpecialEffectTarget(effectPath, target, attachmentPoint)
 
     static function createEffect(string effectPath, widget target, string attachmentPoint, real destroyTime) returns effect
-        let e = FX.createEffect(effectPath, target, attachmentPoint)
+        let e = FX_Base.createEffect(effectPath, target, attachmentPoint)
         if destroyTime >= 0
             e.destrAdvTimed(destroyTime)
         return e
@@ -69,36 +68,29 @@ public class FX
 
     /** creates an effect on the pos for a specific player, (destroyTime < 0 ) == permanent*/
     static function createEffect(int pId, string effectPath, vec2 pos, real destroyTime) returns effect
-        let e = FX.createEffect(pId, effectPath, pos)
+        let e = FX_Base.createEffect(pId, effectPath, pos)
         if destroyTime >= 0
             e.destrAdvTimed(destroyTime)
         return e
 
     /** creates an effect on the pos for a specific player, (destroyTime < 0 ) == permanent*/
     static function createEffect(int pId, string effectPath, vec3 pos, real destroyTime) returns effect
-        let e = FX.createEffect(pId, effectPath, pos)
+        let e = FX_Base.createEffect(pId, effectPath, pos)
         if destroyTime >= 0
             e.destrAdvTimed(destroyTime)
         return e
 
     /** creates an effect on the pos and scales it by a specific range, (destroyTime < 0 ) == permanent*/
     static function createEffectWithAoeScale(int pId, string effectPath, vec2 pos, real aoeScaleRange, real destroyTime) returns effect
-        let areaEffect = FX.createEffect(pId, effectPath, pos, destroyTime)
+        let areaEffect = FX_Base.createEffect(pId, effectPath, pos, destroyTime)
         BlzSetSpecialEffectScale(areaEffect, aoeScaleRange/100)
         return areaEffect
     
     /** creates an effect on the pos and scales it by a specific range for a specific player, (destroyTime < 0 ) == permanent*/
     static function createEffectWithAoeScale(int pId, string effectPath, vec3 pos, real aoeScaleRange, real destroyTime) returns effect
-        let areaEffect = FX.createEffect(pId, effectPath, pos, destroyTime)
+        let areaEffect = FX_Base.createEffect(pId, effectPath, pos, destroyTime)
         BlzSetSpecialEffectScale(areaEffect, aoeScaleRange/100)
         return areaEffect
 
     @configurable static function createTag(int _pId, vec3 _pos, vec2 _velocity, string _text, real _textSize, real _duration, real _fadePoint, colorA _color)
         //_CreateTTExEntity_fading(pos, velocity, text, textSize, duration, color, pId)..setFadepoint(fadePoint)
-
-    static function createJobChangeEffect(vec2 pos)
-        FX.createEffect(JOB_CHANGE_FX_PATH, pos)
-        ..setAlpha(255)
-        ..setColor(255, 255, 255)
-        ..setScale(1.0)
-        ..destrTimed(5)

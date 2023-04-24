@@ -5,7 +5,7 @@
 *   Author:         Alex
 */
 
-package ClosureTimerExtensions
+package ext_ClosureTimers
 
 import public TimerUtils
 import public ClosureTimers
