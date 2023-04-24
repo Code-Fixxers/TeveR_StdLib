@@ -1,7 +1,8 @@
-package StringExtensions
+package ext_String
 import ObjectIds
 import ErrorHandling
 
+public constant string STRING_COLOR_END                     = "|r"
 
 public interface ForStringSplitCallback
     function callback(string str)
@@ -131,3 +132,16 @@ public function string.replaceInvalidChars(string invalidCharset, string replace
 
 public function string.getIndexOfStringBeforePos(string lookup, int pos) returns int
     return this.substring(0, pos).lastIndexOf(lookup)
+
+public function string.addColor(string _color) returns string
+    return this.substring(0, 2) != "|c" ? _color + this + STRING_COLOR_END : this
+    
+public function string.addColor(color _color) returns string
+    return this.addColor(_color.toColorString())
+
+public function string.addColor(colorA _color) returns string
+    return this.addColor(_color.toColorString())
+
+/** Removes color from at start of string and "|r" at the end of string. */
+public function string.removeColor() returns string
+    return this.indexOf("|c") == 0 ? this.substring(10, this.length()-2) : this

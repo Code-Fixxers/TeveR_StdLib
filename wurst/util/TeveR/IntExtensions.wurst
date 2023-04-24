@@ -1,7 +1,0 @@
-package IntExtensions
-@deprecated("Should use min instead")
-public function least(int i, int j) returns int
-    return i > j ? j : i
-@deprecated("Should use max instead")
-public function greatest(int i, int j) returns int
-    return i < j ? j : i

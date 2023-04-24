@@ -1,6 +1,8 @@
 package AttachmentPoints
 import NoWurst
 
+public tuple attachmentpoints(string atp0, string atp1, string atp2, string atp3, string atp4, string atp5)
+
 /** Class that contains every known attachmentpoint in game */
 public class AttachmentPoints
 	/** The attachmentpoint 'overhead' floats over the unit's head, but doesn't sway with it */

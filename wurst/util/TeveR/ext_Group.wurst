@@ -5,7 +5,7 @@
 *   Author:         Alex
 */
 
-package GroupExtensions
+package ext_Group
 
 import public GroupUtils
 

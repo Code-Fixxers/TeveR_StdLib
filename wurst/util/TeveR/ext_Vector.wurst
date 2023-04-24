@@ -1,7 +1,6 @@
-package VectorExtensions
+package ext_Vector
 //* StdLib
 import ClosureTimers
-import public GroupUtils
 import MapBounds
 //* TeveR_Main
 import GroupExtensions
@@ -9,6 +8,7 @@ import GroupExtensions
 
 
 public tuple lineFormular(real m, real b)
+public tuple fourPointTuple(vec2 p1, vec2 p2, vec2 p3, vec2 p4)
 
 /** return f(x) for a given point on a line)*/
 public function real.getYOnLine(lineFormular line) returns real
@@ -165,7 +165,7 @@ public function vec2.getUnitInRangeExWithType(real minRange, real maxRange, Unit
     units.release()
     return target
 
-// TODO: Add this function using TUnits
+
 function group.filterUnitByTargetType(UnitsInRangeTargetTypes targetType, unit only_enemy, int only_pId) returns unit
     unit target = null
     this.filterAliveUnits(only_enemy, only_pId)
@@ -262,12 +262,6 @@ public function rect.debugBoundaries(real duration)
             l1.destr()
             l2.destr()
             l3.destr()
-
-/** addes a special effect to a target loc an returns it*/
-public function location.addSpecialEffect(string model) returns effect
-    return AddSpecialEffectLoc(model, this)
-    
-public tuple fourPointTuple(vec2 p1, vec2 p2, vec2 p3, vec2 p4)
 
 /** checks if a vec2 is crossing some border lines*/
 public function vec2.isCrossingLine(vec2 vi, vec2 vj) returns bool

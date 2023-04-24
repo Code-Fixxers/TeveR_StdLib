@@ -9,7 +9,7 @@
 *
 */
 
-package HashMapExtensions
+package ext_HashMap
 
 import HashMap
 

@@ -9,7 +9,7 @@
 *
 */
 
-package DestructableExtensions
+package ext_Destructable
 
 /** used to toggles a destructable gate open close state*/
 public function destructable.toggleGate()
