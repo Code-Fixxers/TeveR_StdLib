@@ -450,47 +450,47 @@ public class LLIterator<T>
 
 	construct(LinkedList<T> parent)
 		this.parent  = parent
-		reset()
+		this.reset()
 
 	construct(LinkedList<T> parent, bool destroyOnClose)
 		this.parent  = parent
-		reset()
+		this.reset()
 		this.destroyOnClose = destroyOnClose
 
 	function reset()
-		this.dummy   = parent.getDummy()
+		this.dummy   = parent != null ? parent.getDummy() : null
 		this.current = dummy
 
 	/** Removes from the list the last element that was returned by next() (optional operation).
 	 	This call can only be made once per call to next */
 	function remove() returns T
-		if current != dummy
-			parent.removeEntry(current)
-			let removed = current.elem
-			current = current.prev
+		if this.current != this.dummy
+			this.parent.removeEntry(this.current)
+			let removed = this.current.elem
+			this.current = this.current.prev
 			return removed
 		return null
 
 	/** Modifies the last element that was returned by next() (optional operation). */
 	function modify(T newval)
-		if current != dummy
-			current.elem = newval
+		if this.current != this.dummy
+			this.current.elem = newval
 
 	function hasNext() returns boolean
-		return current.next != dummy
+		return this.current.next != this.dummy
 
 	function next() returns T
-		current = current.next
-		return current.elem
+		this.current = this.current.next
+		return this.current.elem
 
 	function lookahead() returns T
 		T retVal = null
-		if hasNext()
-			retVal = current.next.elem
+		if this.hasNext()
+			retVal = this.current.next.elem
 		return retVal
 
 	function close()
-		if destroyOnClose
+		if this.destroyOnClose
 			destroy this
 
 public class LLBackIterator<T>
@@ -508,7 +508,7 @@ public class LLBackIterator<T>
 		reset()
 
 	function reset()
-		this.current = dummy
+		this.current = this.dummy
 
 	/** Modifies the last element that was returned by next() (optional operation). */
 	function modify(T newval)
