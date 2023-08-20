@@ -29,6 +29,18 @@ public function int.toReal() returns real
 public function int.toString() returns string
 	return I2S(this)
 
+/** Returns the string representation of this int with suffix like "st", "th" etc */
+public function int.toStringSuffix() returns string
+	var s = "th"
+	switch(this)
+		case 1
+			s = "st"
+		case 2
+			s = "nd"
+		case 3
+			s = "rd"
+	return I2S(this) + s
+
 /** Returns this int to the power of the argument int */
 public function int.pow(int x) returns int
 	int result = 1
