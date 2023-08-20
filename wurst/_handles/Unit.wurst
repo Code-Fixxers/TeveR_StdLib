@@ -523,6 +523,7 @@ public function unit.setInvulnerable(boolean flag)
 public function unit.setMana(real val)
 	this.setState(UNIT_STATE_MANA, val)
 
+@deprecated("use TUnit.setMoveSpeed instead")
 public function unit.setMoveSpeed(real speed)
 	SetUnitMoveSpeed(this, speed)
 
