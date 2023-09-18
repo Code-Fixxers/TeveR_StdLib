@@ -2,16 +2,12 @@
 *   Name:           HashMapExtensions.wurst
 *   System:         General System
 *   Description:    This script serves for definition of serveral helper and enhanced usefull functions for hashmaps
-*   Author:         Alex
-*   Date:           04/08/2018
-*   Changed:        04/08/2018
-*   Changelog:      04/08/2018 - created this script
-*
 */
 
 package ext_HashMap
 
 import HashMap
+import CustomLinkedList
 
 /** Custom Function to search for for value of generic type inside a hashmap with keys of type int ! caution this is not very efficient when int index is used with handleids or large ints ! */
 public function HashMap<int, T2>.lookUp<T1, T2>(T2 value) returns int
@@ -29,3 +25,20 @@ public function HashMap<int, T2>.lookUp<T1, T2>(T2 value) returns int
 public function HashMap<T1, T2>.removeSelf<T1, T2>()       // not yet used needs testing
     this.flush()
     destroy this
+
+/** Convertes a given iterable hashmap into an customlinkedlist ! CAUTION returned obj needs to be removed after use !*/
+public function IterableMap<int, T>.toCustomLinkedList<T>() returns CustomLinkedList<T>
+    let list = CustomLinkedList.create<T>()..setup()
+
+    for idx in this
+        list.add(this.get(idx))
+    return list
+
+/** Creates a iterable hashmap base of the data of an customlinkedlist ! CAUTION returned obj needs to be removed after use !*/
+public function IterableMap<int, T>.fromCustomLinkedList<T>(CustomLinkedList<T> list)
+    int i = 0
+    
+    if list != null
+        for val in list
+            this.put(i, val)
+            i += 1
