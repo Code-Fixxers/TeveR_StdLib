@@ -22,7 +22,7 @@ public enum UnitsInRangeTargetTypes
     HighestMaxMP
     HighestArmor
     Slowest
-    Fastest  
+    Fastest
 
 function group.filterUnitByTargetType(UnitsInRangeTargetTypes targetType, unit only_enemy, int only_pId) returns unit
     unit target = null
@@ -112,3 +112,14 @@ public function group.filterAliveUnits(unit only_enemy, int only_pId) returns gr
             this.remove(u)
     return this
     
+/** removes all dead unit from group, optional also all that ar not enemy to a specific unit and that are not owned by specific player id */
+public function group.getClosestUnit(vec2 pos) returns unit
+    var distance = 9999.
+    unit _u = null
+    for u in this
+        let newDistance = u.getPos().distanceTo(pos)
+        if newDistance <= distance
+            _u = u
+            distance = newDistance
+
+    return _u
