@@ -16,7 +16,7 @@ import TUnit
 //* <--- imports
 
 public interface TUnitSyncListener
-	function onDataSynced(TUnit data)
+    function onDataSynced(TUnit data)
 
 /** Syncs an int from the given player. */
 public function TUnit.sync(player p, TUnitSyncListener listener)
