@@ -1,0 +1,27 @@
+/*
+*   Name:           ext_SyncSimple.wurst
+*   System:         General System
+*   Description:    This script serves for definition of serveral helper and enhanced usefull functions for SyncSimple
+*   Author:         Alex
+*
+*/
+
+package ext_SyncSimple
+
+//* StdLib
+import public SyncSimple
+//* Tever_KUI
+//* TeveR_Main
+import TUnit
+//* <--- imports
+
+public interface TUnitSyncListener
+	function onDataSynced(TUnit data)
+
+/** Syncs an int from the given player. */
+public function TUnit.sync(player p, TUnitSyncListener listener)
+    let thisData = this castTo int
+
+    thisData.toString().sync(p) data ->
+        listener.onDataSynced(data.toInt() castTo TUnit)
+        destroy listener
