@@ -6,8 +6,8 @@
 
 package ext_HashMap
 
-import HashMap
-import CustomLinkedList
+import public HashMap
+import public CustomLinkedList
 
 /** Custom Function to search for for value of generic type inside a hashmap with keys of type int ! caution this is not very efficient when int index is used with handleids or large ints ! */
 public function HashMap<int, T2>.lookUp<T1, T2>(T2 value) returns int
