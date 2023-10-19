@@ -18,6 +18,7 @@ public abstract class CallbackSingleNoAutoDestroy
 
     function start(real time)
         if t != null
+            t.pause()
             t.release()
 
         t = getTimer()
@@ -51,6 +52,10 @@ public abstract class CallbackCountedNoAutoDestroy
     protected abstract function call(thistype cb)
 
     function start(real time, int callAmount, CallbackSingle cb)
+        if t != null
+            t.pause()
+            t.release()
+
         this.finishedCallback = cb
         this.t = getTimer()
         t.setData(this castTo int)
@@ -97,6 +102,10 @@ public abstract class CallbackMutablePeriodic
         return this.period    
 
     protected function start(timer whichTimer, real time)
+        if t != null
+            t.pause()
+            t.release()
+
         this.t = whichTimer
         this.setPeriod(time)
 
