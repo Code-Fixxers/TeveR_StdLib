@@ -132,6 +132,8 @@ init
 			syncQueue.dequeue()
 			destroy syncData
 		else
+			if syncData.syncBuffer == null // TODO: Validate this is proper way, this issue occured in CE, rarely in Reforged
+				syncData.syncBuffer = new ChunkedString()
 			syncData.syncBuffer.append(eventData)
 			if eventPrefix == LAST_CHUNK_PREFIX
 				syncData.blistener.onDataSynced(syncData.syncBuffer)
