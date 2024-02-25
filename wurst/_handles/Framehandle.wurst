@@ -5,6 +5,7 @@ import Vectors
 import Colors
 import ErrorHandling
 import Annotations
+import initlater Logging
 
 /*
 	Custom frames can be defined in a frame definition file (*.fdf).
@@ -100,7 +101,11 @@ public function getFrameByName(string name, integer createContext) returns frame
 /**	Returns the framehandle of the given name and createContext index (children inherit the createContext value of their parent) */
 public function getFrame(string name, integer createContext) returns framehandle
 	verifyFrameNameLength(name)
-	return BlzGetFrameByName(name, createContext)
+	let f = BlzGetFrameByName(name, createContext)
+	if f == null
+		Logger.trace(LoggerTag.KUIS, "Frame '" + name + "' in context " + createContext.toString() + " does not exist!")
+		Logger.trace(LoggerTag.KUIS, getStackTraceString())
+	return f
 
 /**	Returns the framehandle of the given name */
 public function getFrame(string name) returns framehandle
@@ -282,6 +287,13 @@ public function framehandle.setFocus(bool flag)
 /** Enables or disables the user interaction for the frame for given player */
 public function framehandle.setFocus(player p, bool flag)
 	if localPlayer == p or p == null
+		if not flag
+			if this.isVisible()
+				this.hide(p)
+				this.show(p)
+			else
+				this.show(p)
+				this.hide(p)
 		this.setFocus(flag)
 
 /** Removes the focus from a given frame by disable and instantly enabling it. Mandatory for Frames of type 'SIMPLE' */
@@ -293,8 +305,6 @@ public function framehandle.unfocus()
 		this.enable()
 		this.disable()
 
-	this.setFocus(false)
-
 /** Removes the focus from a given frame by disable and instantly enabling it for given player. Mandatory for Frames of type 'SIMPLE' */
 public function framehandle.unfocus(player p)
 	if this.isEnabled(p)
@@ -303,8 +313,6 @@ public function framehandle.unfocus(player p)
 	else
 		this.enable(p)
 		this.disable(p)
-
-	this.setFocus(p, false)
 
 /** Sets the model of the model frame */
 public function framehandle.setModel(string modelFile, integer cameraIndex)
