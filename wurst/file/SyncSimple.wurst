@@ -117,7 +117,7 @@ function checkQueue()
 function shouldSync() returns boolean
 	return SYNC_IN_REPLAYS or gameStatus != REPLAY
 
-init
+function initSyncSimple()
 	let trig = CreateTrigger()
 	for i = 0 to bj_MAX_PLAYER_SLOTS - 1
 		BlzTriggerRegisterPlayerSyncEvent(trig, players[i], DEFAULT_PREFIX, false)

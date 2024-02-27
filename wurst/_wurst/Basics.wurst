@@ -30,7 +30,10 @@ public constant DUMMY_PLAYER 			= players[PLAYER_NEUTRAL_PASSIVE]
 public constant DUMMY_HOSTILE_PLAYER 	= players[PLAYER_NEUTRAL_AGGRESSIVE]
 
 // WC3 limitations constants
-public constant real    TIMER_MIN_DELAY                 	= .03125
+//@deprecated("Consider using SHORT or SHORTEST delay instead of MIN_DELAY")
+public constant real    TIMER_MIN_DELAY                 	= 0.03125
+public constant real    TIMER_SHORTEST_DELAY                = 0.05
+public constant real    TIMER_SHORT_DELAY                 	= 0.1
 public constant int     WC3LIMIT_OBJECTS_DESCRIPTION_LENGTH = 1023
 public constant int     WC3LIMIT_FUNCTIONS_PARAMETER_COUNT  = 31
 public constant int     WC3LIMIT_ARRAY_SIZE                 = 32768 // For arrays OUTSIDE of class, or static arrays in classes
