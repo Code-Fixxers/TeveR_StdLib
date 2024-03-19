@@ -18,7 +18,7 @@ public abstract class CallbackSingleNoAutoDestroy
 
     function start(real time)
         if t != null
-            t.pause()
+            //t.pause()
             t.release()
 
         t = getTimer()
@@ -103,7 +103,7 @@ public abstract class CallbackMutablePeriodic
 
     protected function start(timer whichTimer, real time)
         if t != null
-            t.pause()
+            //t.pause()
             t.release()
 
         this.t = whichTimer
