@@ -5,6 +5,7 @@ import Basics
 import HashMap
 import Trigger
 import public Timer
+import GameTimer
 
 /* Basic Timer Recycling and data attachment */
 
@@ -35,10 +36,10 @@ public function getTimer() returns timer
 /** Release the timer. Use this instead of "DestroyTimer" ! */
 public function timer.release()
 	if this == null
-		error("Trying to release a null timer")
+		error(getElapsedGameTime().toString() + ": Trying to release a null timer")
 		return
 	if this.getData() == HELD
-		error("ReleaseTimer: Double free!")
+		error(getElapsedGameTime().toString() + ": ReleaseTimer: Double free!")
 		return
 	this.setData(HELD)
 	this.pause()
