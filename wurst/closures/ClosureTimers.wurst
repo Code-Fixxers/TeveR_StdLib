@@ -4,8 +4,6 @@ import TimerDialog
 import TimerUtils
 import Real
 import Wurstunit
-import initlater Logging
-import initlater GameTimer
 
 /** Execute an action after a certain time.
 	The callback object is automatically destroyed.
