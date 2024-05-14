@@ -5,7 +5,6 @@ import Integer
 import String
 import ClosureForGroups
 import Real
-import Annotations
 
 /**
  * Doubly-linked list implementation that implements all common list, stack and queue operations.
@@ -115,10 +114,6 @@ public class LinkedList<T>
 		return getLast()
 
 	/** Returns whether the lists contains the specified element */
-	@deprecated("Use .has instead") function contains(T elem) returns boolean
-		return has(elem)
-
-	/** Returns whether the lists contains the specified element */
 	function has(T elem) returns boolean
 		var entry = dummy.next
 		while entry != dummy
@@ -149,10 +144,6 @@ public class LinkedList<T>
 				break
 			entry = entry.next
 		return result
-
-	/** gets the size of the list */
-	@deprecated("Use .size() instead.") function getSize() returns int
-		return size
 
 	/** gets the size of the list (java-compat wrapper) */
 	function size() returns int
@@ -214,10 +205,6 @@ public class LinkedList<T>
 				return true
 			current = current.next
 		return false
-
-	@deprecated("Use #removeIf")
-	function removeWhen(LinkedListPredicate<T> predicate)
-		removeIf(predicate)
 
 	/** Removes the element if the predicates returns true */
 	function removeIf(LinkedListPredicate<T> predicate)
@@ -489,6 +476,9 @@ public class LLIterator<T>
 			retVal = this.current.next.elem
 		return retVal
 
+	function previous() returns T
+		return current.prev.elem
+
 	/** Adds an element before the currently iterated element */
 	function addBefore(T elem)
 		let entry = new LLEntry<T>(elem, current.prev, current)
@@ -573,6 +563,10 @@ public function LinkedList<real>.sort()
 constant Comparator<int> intComparator = (i1, i2) -> i1 - i2
 public function LinkedList<int>.sort()
 	this.sortWith(intComparator)
+
+constant Comparator<string> stringComparator = (s1, s2) -> stringCompare(s1, s2)
+public function LinkedList<string>.sort()
+	this.sortWith(stringComparator)
 
 public function group.asList() returns LinkedList<unit>
 	let result = new LinkedList<unit>()
