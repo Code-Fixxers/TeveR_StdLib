@@ -46,6 +46,8 @@ public function doAfterWithDialogue(real timeToWait, string titleText, Callback 
 
 /** Execute an action with a 0-second timer delay.
 	The callback object is destroyed afterwards.
+
+	Nice use of this is also inside execute blocks when running callbacks which crash - as those will not print any message. Using this fixes that.
 */
 public function nullTimer(CallbackSingle cb) returns CallbackSingle
 	return doAfter(0, cb)
