@@ -187,6 +187,10 @@ public function framehandle.setVisible(player p, bool flag)
 	if localPlayer == p or p == null
 		this.setVisible(flag)
 
+/** Shows or hides the frame to the given player */
+public function framehandle.setVisible(int pId, bool flag)
+	this.setVisible(players[pId], flag)
+
 /** Shows the frame */
 public function framehandle.show()
 	this.setVisible(true)
@@ -194,6 +198,10 @@ public function framehandle.show()
 /** Shows the frame to the specific player */
 public function framehandle.show(player p)
 	this.setVisible(p, true)
+
+/** Shows the frame to the specific player */
+public function framehandle.show(int pId)
+	this.setVisible(players[pId], true)
 
 /** Hides the frame */
 public function framehandle.hide()
@@ -203,6 +211,10 @@ public function framehandle.hide()
 public function framehandle.hide(player p)
 	this.setVisible(p, false)
 
+/** Hides the frame to the specific player */
+public function framehandle.hide(int pId)
+	this.setVisible(players[pId], false)
+
 /** Returns whether the frame is visible or not */
 public function framehandle.isVisible() returns bool
 	return BlzFrameIsVisible(this)
@@ -210,6 +222,10 @@ public function framehandle.isVisible() returns bool
 /** Returns whether the frame is visible or not for given player */
 public function framehandle.isVisible(player p) returns boolean
 	return localPlayer == p or p == null ? this.isVisible() : false
+
+/** Returns whether the frame is visible or not for given player */
+public function framehandle.isVisible(int pId) returns boolean
+	return this.isVisible(players[pId])
 
 /** Returns the frame's name */
 public function framehandle.getName() returns string
@@ -231,6 +247,10 @@ public function framehandle.setText(string text)
 public function framehandle.setText(player p, string text)
 	if localPlayer == p or p == null
 		this.setText(text)
+
+/** Sets the text value of the text frame for the specific player*/
+public function framehandle.setText(int pId, string text)
+	this.setText(players[pId], text)
 
 /** Returns the maximum allowed text size of the text frame */
 public function framehandle.getTextSizeLimit() returns integer
@@ -264,6 +284,10 @@ public function framehandle.setFocus(player p, bool flag)
 				this.hide(p)
 		this.setFocus(flag)
 
+/** Enables or disables the user interaction for the frame for given player */
+public function framehandle.setFocus(int pId, bool flag)
+	this.setFocus(players[pId], flag)
+
 /** Removes the focus from a given frame by disable and instantly enabling it. Mandatory for Frames of type 'SIMPLE' */
 public function framehandle.unfocus()
 	if this.isEnabled()
@@ -282,6 +306,10 @@ public function framehandle.unfocus(player p)
 		this.enable(p)
 		this.disable(p)
 
+/** Removes the focus from a given frame by disable and instantly enabling it for given player. Mandatory for Frames of type 'SIMPLE' */
+public function framehandle.unfocus(int pId)
+	this.unfocus(players[pId])
+
 /** Sets the model of the model frame */
 public function framehandle.setModel(string modelFile, integer cameraIndex)
 	BlzFrameSetModel(this, modelFile, cameraIndex)
@@ -293,6 +321,10 @@ public function framehandle.isEnabled() returns bool
 /** Returns the state of the frame for given player */
 public function framehandle.isEnabled(player p) returns boolean
 	return localPlayer == p or p == null ? this.isEnabled() : false
+
+/** Returns the state of the frame for given player */
+public function framehandle.isEnabled(int pId) returns boolean
+	return this.isEnabled(players[pId])
 
 /** Enables or disables the frame */
 public function framehandle.setEnabled(bool enabled)
@@ -311,10 +343,18 @@ public function framehandle.enable(player p)
 	if localPlayer == p or p == null
 		this.enable()
 
+/** Enables the frame for the player p */
+public function framehandle.enable(int pId)
+	this.enable(players[pId])
+
 /** Disables the frame for the player p */
 public function framehandle.disable(player p)
 	if localPlayer == p or p == null
 		this.disable()
+
+/** Disables the frame for the player p */
+public function framehandle.disable(int pId)
+	this.disable(players[pId])
 
 /** Returns the decimal alpha value of the frame (only for specific frames) */
 public function framehandle.getAlpha() returns int
@@ -328,6 +368,10 @@ public function framehandle.setAlpha(integer alpha)
 public function framehandle.setAlpha(player p, integer alpha)
 	if localPlayer == p or p == null
 		this.setAlpha(alpha)
+
+/** Sets the decimal alpha value of the frame (only for specific frames) to the given player */
+public function framehandle.setAlpha(int pId, integer alpha)
+	this.setAlpha(players[pId], alpha)
 
 /** Unknown */
 public function framehandle.setSpriteAnimate(integer primaryProp, integer flags)
@@ -347,6 +391,13 @@ public function framehandle.setTexture(string texFile, integer flag, bool blend)
 public function framehandle.setTexture(player p, string texFile, integer flag, bool blend)
 	if localPlayer == p or p == null
 		this.setTexture(texFile, flag, blend)
+
+/** Sets the texture of the frame for the specific player
+	texFile: the path of the texture
+	flags: unknown
+	blend: true to keep transparency */
+public function framehandle.setTexture(int pId, string texFile, integer flag, bool blend)
+	this.setTexture(players[pId], texFile, flag, blend)
 
 /** Sets the frame's scaling value.
 	Frame's size, children frames and relative anchor points scale */
@@ -487,3 +538,47 @@ public function framehandle.getChildrenCount() returns int
 /** Get child frame handle from given index */
 public function framehandle.getChild(int index) returns framehandle
 	return BlzFrameGetChild(this, index)
+
+public function framehandle.setupFrameInSubFrame(originframetype frame, int index, real sizeX, real sizeY, framepointtype rel, framepointtype relPos, real relPosX, real relPosY)
+    let subFrame = getOriginFrame(frame, index)
+    if subFrame != null and this != null
+        subFrame.show()
+        subFrame.clearAllPoints()
+        subFrame.setParent(this)
+        subFrame.setSize(sizeX, sizeY)
+        subFrame.setPoint(rel, this, relPos, relPosX, relPosY)
+
+public function framehandle.setupFrameInSubFrame(originframetype frame, int index, real sizeX, real sizeY, framepointtype rel, framepointtype relPos, real relPosX, real relPosY, int priority)
+    let subFrame = getOriginFrame(frame, index)
+    if subFrame != null and this != null
+        subFrame.show()
+        subFrame.clearAllPoints()
+        subFrame.setParent(this)
+        subFrame.setSize(sizeX, sizeY)
+        subFrame.setPoint(rel, this, relPos, relPosX, relPosY)
+        subFrame.setLevel(priority)
+
+public function framehandle.setupFrameAbsInSubFrame(originframetype frame, int index, real sizeX, real sizeY, framepointtype relPos, real relPosX, real relPosY)
+    let subFrame = getOriginFrame(frame, index)
+    if subFrame != null and this != null
+        subFrame.show()
+        subFrame.clearAllPoints()
+        subFrame.setParent(this)
+        subFrame.setSize(sizeX, sizeY)
+        subFrame.setAbsPoint(relPos, relPosX, relPosY)
+
+public function framehandle.setupFrameInSubFrame(framehandle subFrame, real sizeX, real sizeY, framepointtype rel, framepointtype relPos, real relPosX, real relPosY)
+    if subFrame != null and this != null
+        subFrame.show()
+        subFrame.clearAllPoints()
+        subFrame.setParent(this)
+        subFrame.setSize(sizeX, sizeY)
+        subFrame.setPoint(rel, this, relPos, relPosX, relPosY)
+
+public function framehandle.setupFrameAbsInSubFrame(framehandle subFrame, real sizeX, real sizeY, framepointtype relPos, real relPosX, real relPosY)
+    if subFrame != null and this != null
+        subFrame.show()
+        subFrame.clearAllPoints()
+        subFrame.setParent(this)
+        subFrame.setSize(sizeX, sizeY)
+        subFrame.setAbsPoint(relPos, relPosX, relPosY)
