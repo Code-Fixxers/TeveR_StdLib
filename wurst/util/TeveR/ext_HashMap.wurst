@@ -8,6 +8,7 @@ package ext_HashMap
 
 import public HashMap
 import public CustomLinkedList
+import ClosureTimers
 
 /** Custom Function to search for for value of generic type inside a hashmap with keys of type int ! caution this is not very efficient when int index is used with handleids or large ints ! */
 public function HashMap<int, T2>.lookUp<T1, T2>(T2 value) returns int
@@ -42,3 +43,61 @@ public function IterableMap<int, T>.fromCustomLinkedList<T>(CustomLinkedList<T> 
         for val in list
             this.put(i, val)
             i += 1
+
+public class Mutex
+    private static HashMap<int, thistype> map_mutexid_obj
+    private static int mutex_iter = 0
+    private HashMap<int, bool> map_pId_mutex
+    private int mutex_id = 0
+
+    private construct()
+        Mutex.mutex_iter += 1
+        this.mutex_id = Mutex.mutex_iter
+        this.map_pId_mutex = new HashMap<int, bool>()
+        for int i = 0 to bj_MAX_PLAYERS - 1
+            this.map_pId_mutex.put(i, false)
+
+    static function get(int mutexId) returns Mutex
+        if Mutex.map_mutexid_obj == null
+            Mutex.map_mutexid_obj = new HashMap<int, thistype>()
+        if not Mutex.map_mutexid_obj.has(mutexId)
+            return null
+        return Mutex.map_mutexid_obj.get(mutexId)
+
+    static function create() returns Mutex
+        let obj = new Mutex()
+        if Mutex.map_mutexid_obj == null
+            Mutex.map_mutexid_obj = new HashMap<int, thistype>()
+        Mutex.map_mutexid_obj.put(obj.getId(), obj)
+        return obj
+
+    function getId() returns int
+        return mutex_id
+
+    /** Returns true if lock was successful - mutex cannot be locked when locking it. */
+    function lock(int pId) returns bool
+        print("lock")
+        if not this.isLocked(pId)
+            print("locking")
+            this.map_pId_mutex.put(pId, true)
+            return true
+        return false
+
+    /** Returns true if lock was successful - . */
+    function unlock(int pId)
+        print("unlocking")
+        this.map_pId_mutex.put(pId, false)
+
+    function isLocked(int pId) returns bool
+        if not this.map_pId_mutex.has(pId)
+            this.map_pId_mutex.put(pId, false)
+        return this.map_pId_mutex.get(pId)
+
+    /** Returns true if lock was successful.
+        Unlocks after specified time.  */
+    function lock(int pId, real timed) returns bool
+        let result = this.lock(pId)
+        if result
+            doAfter(timed) ->
+                this.unlock(pId)
+        return result
