@@ -76,16 +76,13 @@ public class Mutex
 
     /** Returns true if lock was successful - mutex cannot be locked when locking it. */
     function lock(int pId) returns bool
-        print("lock")
         if not this.isLocked(pId)
-            print("locking")
             this.map_pId_mutex.put(pId, true)
             return true
         return false
 
     /** Returns true if lock was successful - . */
     function unlock(int pId)
-        print("unlocking")
         this.map_pId_mutex.put(pId, false)
 
     function isLocked(int pId) returns bool
