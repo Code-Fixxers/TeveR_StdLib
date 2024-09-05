@@ -26,6 +26,8 @@ public function timer.getData() returns int
 You can attach data to the timer with .setData and retrieve it with .getData
 If you're done with the timer, release it with .release */
 public function getTimer() returns timer
+	if compiletime
+		print("freeTimersCount: " + freeTimersCount.toString())
 	if freeTimersCount > 0
 		freeTimersCount--
 		freeTimers[freeTimersCount].setData(0)
