@@ -740,6 +740,10 @@ public function unit.disableAbility(int abilId, boolean flag, boolean hideUI)
 public function unit.disableAttack(boolean flag, boolean hideUI)
 	this.disableAbility(AbilityIds.attack, flag, hideUI)
 
+/** Index starts with 0 for regular attack. */
+public function unit.disableAttackEx(int index, bool flag)
+	this.setFieldWeapon(UNIT_WEAPON_BF_ATTACKS_ENABLED, index, not flag)
+
 public function unit.disableWorkQueue(boolean flag, boolean hideUI)
 	this.disableAbility(AbilityIds.queue, flag, hideUI)
 
