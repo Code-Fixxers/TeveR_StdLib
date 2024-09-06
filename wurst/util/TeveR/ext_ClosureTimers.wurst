@@ -18,12 +18,11 @@ public abstract class CallbackSingleNoAutoDestroy
 
     function start(real time)
         if t != null
-            t.pause()
-        else
-            this.t = getTimer()
-        this.t
-            ..setData(this castTo int)
-            ..start(time, () -> staticCallback())
+            t.release() // Must release here
+            t = null
+        t = getTimer()
+        ..setData(this castTo int)
+        ..start(time, () -> staticCallback())		
 
     function destroyMe()
         destroy this
@@ -42,6 +41,7 @@ public abstract class CallbackSingleNoAutoDestroy
     ondestroy
         if t != null
             t.release()
+            t = null
 
 /** used as callback to get call from outside, but does not get deleted on call, like it does for CallbackCounted in ClosureTimers **/
 public abstract class CallbackCountedNoAutoDestroy
