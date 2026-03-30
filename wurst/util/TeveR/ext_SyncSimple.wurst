@@ -10,25 +10,10 @@ package ext_SyncSimple
 
 //* StdLib
 import public SyncSimple
-//* Tever_KUI
-//* TeveR_Main
-import TUnit
 //* <--- imports
-
-public interface TUnitSyncListener
-    function onDataSynced(TUnit data)
 
 public interface AnySyncListener<T>
     function onDataSynced(T data)
-
-
-/** Syncs an TUnit from the given player. */
-public function TUnit.sync(player p, TUnitSyncListener listener)
-    let thisData = this castTo int
-
-    thisData.toString().sync(p) data ->
-        listener.onDataSynced(data.toInt() castTo TUnit)
-        destroy listener
 
 /** Syncs an any class from the given player. Caution can only work with objects that are already in sync */
 public function player.sync<T>(T data, AnySyncListener<T> listener)

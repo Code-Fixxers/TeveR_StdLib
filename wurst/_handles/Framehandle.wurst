@@ -5,7 +5,6 @@ import Vectors
 import Colors
 import ErrorHandling
 import Annotations
-import initlater Logging
 
 /*
     Custom frames can be defined in a frame definition file (*.fdf).
@@ -92,11 +91,7 @@ public function getOriginFrame(originframetype frameType, integer index) returns
 /**    Returns the framehandle of the given name and createContext index (children inherit the createContext value of their parent) */
 public function getFrame(string name, integer createContext) returns framehandle
     verifyFrameNameLength(name)
-    let f = BlzGetFrameByName(name, createContext)
-    if f == null
-        Logger.trace(LoggerTag.KUIS, "Frame '" + name + "' in context " + createContext.toString() + " does not exist!")
-        Logger.trace(LoggerTag.KUIS, getStackTraceString())
-    return f
+    return BlzGetFrameByName(name, createContext)
 
 /**    Returns the framehandle of the given name */
 public function getFrame(string name) returns framehandle
