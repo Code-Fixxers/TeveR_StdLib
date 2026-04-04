@@ -1,0 +1,499 @@
+package SQLiteHelper
+import LinkedList
+
+// ============================================================================
+// COMPILETIME ONLY — SQLite JDBC bindings exposed by the WurstScript compiler.
+// These run during compilation (@compiletime functions) and unit tests (@test).
+// They do NOT exist inside Warcraft III at runtime. Do not call any sqlite_*
+// native or use SqlResult / SqliteDb / SQL from code that runs in-game.
+// ============================================================================
+
+@extern public native sqlite_open(string path) returns int
+@extern public native sqlite_prepare(int conn, string q) returns int
+@extern public native sqlite_step(int stmt) returns boolean
+@extern public native sqlite_column_string(int stmt, int idx) returns string
+@extern public native sqlite_column_count(int stmt) returns int
+@extern public native sqlite_exec(int conn, string q)
+@extern public native sqlite_finalize(int stmt)
+@extern public native sqlite_close(int conn)
+
+// SQLite default SQLITE_MAX_COLUMN is 2000; JASS arrays cap at 8192.
+constant SQLITE_MAX_COLUMNS = 2000
+
+// ============================================================================
+// SqlResult — a single row from a SELECT query
+// ============================================================================
+
+/** A row returned from a SELECT query. Access columns by index via col(). */
+public class SqlResult
+    string array[2000] cols
+    int columnCount = 0
+
+    /** Raw string value at column index. */
+    function col(int index) returns string
+        return this.cols[index]
+
+    /** Column value parsed as int. */
+    function colInt(int index) returns int
+        return this.cols[index].toInt()
+
+    /** Column value parsed as real. */
+    function colReal(int index) returns real
+        return this.cols[index].toReal()
+
+    /** Column value as boolean ("1" or "true" → true). */
+    function colBool(int index) returns boolean
+        return this.cols[index] == "1" or this.cols[index] == "true"
+
+    /** Number of columns in this row. */
+    function size() returns int
+        return this.columnCount
+
+// ============================================================================
+// SqliteDb — OOP wrapper around a database connection
+// ============================================================================
+
+/** Wraps an SQLite database connection with convenience methods. */
+public class SqliteDb
+    private int conn
+
+    /** Opens (or creates) the database at the given path. Use ":memory:" for temporary databases. */
+    construct(string path)
+        this.conn = sqlite_open(path)
+
+    /** Returns the raw connection handle for direct native calls. */
+    function getHandle() returns int
+        return this.conn
+
+    /** Executes a statement that returns no rows (DDL, INSERT, UPDATE, DELETE). */
+    function exec(string query)
+        sqlite_exec(this.conn, query)
+
+    private function readRow(int stmt, int colCount) returns SqlResult
+        let row = new SqlResult()
+        row.columnCount = colCount
+        for i = 0 to colCount - 1
+            row.cols[i] = sqlite_column_string(stmt, i)
+        return row
+
+    /** Executes a SELECT and returns all result rows. Caller owns the list and its SqlResult entries. */
+    function select(string query) returns LinkedList<SqlResult>
+        let list = new LinkedList<SqlResult>()
+        let stmt = sqlite_prepare(this.conn, query)
+        let numCols = sqlite_column_count(stmt)
+        let limit = numCols > SQLITE_MAX_COLUMNS ? SQLITE_MAX_COLUMNS : numCols
+
+        while sqlite_step(stmt)
+            list.add(readRow(stmt, limit))
+
+        sqlite_finalize(stmt)
+        return list
+
+    /** Executes a SELECT and returns only the first row, or null if no rows match. */
+    function selectFirst(string query) returns SqlResult
+        let stmt = sqlite_prepare(this.conn, query)
+        let numCols = sqlite_column_count(stmt)
+        let limit = numCols > SQLITE_MAX_COLUMNS ? SQLITE_MAX_COLUMNS : numCols
+        SqlResult row = null
+
+        if sqlite_step(stmt)
+            row = readRow(stmt, limit)
+
+        sqlite_finalize(stmt)
+        return row
+
+    /** Returns true if the query produces at least one row. */
+    function exists(string query) returns boolean
+        let stmt = sqlite_prepare(this.conn, query)
+        let found = sqlite_step(stmt)
+        sqlite_finalize(stmt)
+        return found
+
+    /** Runs a "SELECT count(…)" query and returns the first column of the first row as int. */
+    function count(string query) returns int
+        let row = this.selectFirst(query)
+        if row != null
+            let c = row.colInt(0)
+            destroy row
+            return c
+        return 0
+
+    ondestroy
+        sqlite_close(this.conn)
+
+// ============================================================================
+// SQL — configurable singleton for the common single-database workflow
+// ============================================================================
+//
+// COMPILETIME ONLY — like all sqlite_* natives, this class is only available
+// during @compiletime functions and @test runs. It does NOT work at runtime
+// inside Warcraft III.
+//
+// Provides zero-setup access to a single SQLite database, lazily opened on
+// first use. Ideal for compiletime data loading, test fixtures, and any
+// workflow where one database connection is enough.
+//
+// **Quick start** — works immediately with an in-memory database:
+//
+//     SQL.exec("CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT)")
+//     SQL.exec("INSERT INTO items VALUES (1, 'Sword')")
+//     let row = SQL.selectFirst("SELECT name FROM items WHERE id = 1")
+//     print(row.col(0))  // "Sword"
+//
+// **Persistent database** — override the path in your package to read/write
+// a .db file on disk (created automatically if it doesn't exist):
+//
+//     @configurable public constant SQL_DATABASE_PATH = "wurst_data.db"
+//
+// When using a persisted .db file across builds, prefix table creation with
+// DROP TABLE IF EXISTS to keep build scripts idempotent.
+//
+// **@compiletime usage** — load structured data during map compilation:
+//
+//     @compiletime function loadHeroes()
+//         let rows = SQL.select("SELECT name, base_hp FROM heroes")
+//         for row in rows
+//             // ... generate WC3 objects from database rows
+//             destroy row
+//         destroy rows
+//
+// Call SQL.close() when done to release the connection; the next call
+// transparently reopens it.
+// ============================================================================
+
+/** Override this in your package to point at your project database. */
+@configurable public constant SQL_DATABASE_PATH = ":memory:"
+
+/** Singleton database access. Configure the path via SQL_DATABASE_PATH. */
+public class SQL
+    private static SqliteDb db = null
+
+    private static function connection() returns SqliteDb
+        if db == null
+            db = new SqliteDb(SQL_DATABASE_PATH)
+        return db
+
+    static function exec(string query)
+        connection().exec(query)
+
+    static function select(string query) returns LinkedList<SqlResult>
+        return connection().select(query)
+
+    static function selectFirst(string query) returns SqlResult
+        return connection().selectFirst(query)
+
+    static function exists(string query) returns boolean
+        return connection().exists(query)
+
+    static function count(string query) returns int
+        return connection().count(query)
+
+    /** Returns the underlying SqliteDb instance. */
+    static function getDb() returns SqliteDb
+        return connection()
+
+    /** Returns the raw connection handle for direct native calls. */
+    static function getHandle() returns int
+        return connection().getHandle()
+
+    /** Closes the singleton connection. Next call reopens it. */
+    static function close()
+        if db != null
+            destroy db
+            db = null
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+function _createTestDb() returns SqliteDb
+    let db = new SqliteDb(":memory:")
+    db.exec("CREATE TABLE heroes (id INTEGER PRIMARY KEY, name TEXT, role TEXT, power_level INTEGER, alive INTEGER)")
+    db.exec("INSERT INTO heroes (name, role, power_level, alive) VALUES ('Arthur', 'Paladin', 9000, 1)")
+    db.exec("INSERT INTO heroes (name, role, power_level, alive) VALUES ('Merlin', 'Mage', 8500, 1)")
+    db.exec("INSERT INTO heroes (name, role, power_level, alive) VALUES ('Robin', 'Archer', 7200, 0)")
+    return db
+
+// --- SqlResult tests ---
+
+@test function test_SqlResult_col_returnsStringValue()
+    let db = _createTestDb()
+    let row = db.selectFirst("SELECT name, role FROM heroes WHERE name = 'Arthur'")
+    row.col(0).assertEquals("Arthur")
+    row.col(1).assertEquals("Paladin")
+    destroy row
+    destroy db
+
+@test function test_SqlResult_colInt_parsesInteger()
+    let db = _createTestDb()
+    let row = db.selectFirst("SELECT power_level FROM heroes WHERE name = 'Arthur'")
+    row.colInt(0).assertEquals(9000)
+    destroy row
+    destroy db
+
+@test function test_SqlResult_colReal_parsesReal()
+    let db = _createTestDb()
+    db.exec("CREATE TABLE stats (val REAL)")
+    db.exec("INSERT INTO stats VALUES (3.14)")
+    let row = db.selectFirst("SELECT val FROM stats")
+    row.colReal(0).assertEquals(3.14, 0.01)
+    destroy row
+    destroy db
+
+@test function test_SqlResult_colBool_parsesOneAsTrue()
+    let db = _createTestDb()
+    let row = db.selectFirst("SELECT alive FROM heroes WHERE name = 'Arthur'")
+    assertTrue(row.colBool(0))
+    destroy row
+    destroy db
+
+@test function test_SqlResult_colBool_parsesZeroAsFalse()
+    let db = _createTestDb()
+    let row = db.selectFirst("SELECT alive FROM heroes WHERE name = 'Robin'")
+    assertTrue(not row.colBool(0))
+    destroy row
+    destroy db
+
+@test function test_SqlResult_size_matchesColumnCount()
+    let db = _createTestDb()
+    let row = db.selectFirst("SELECT name, role, power_level FROM heroes LIMIT 1")
+    row.size().assertEquals(3)
+    destroy row
+    let row2 = db.selectFirst("SELECT name FROM heroes LIMIT 1")
+    row2.size().assertEquals(1)
+    destroy row2
+    destroy db
+
+// --- SqliteDb.select tests ---
+
+@test function test_SqliteDb_select_returnsAllRows()
+    let db = _createTestDb()
+    let rows = db.select("SELECT name FROM heroes ORDER BY name")
+    rows.size().assertEquals(3)
+    rows.get(0).col(0).assertEquals("Arthur")
+    rows.get(1).col(0).assertEquals("Merlin")
+    rows.get(2).col(0).assertEquals("Robin")
+    for row in rows
+        destroy row
+    destroy rows
+    destroy db
+
+@test function test_SqliteDb_select_emptyResultReturnsEmptyList()
+    let db = _createTestDb()
+    let rows = db.select("SELECT name FROM heroes WHERE name = 'Nobody'")
+    rows.size().assertEquals(0)
+    destroy rows
+    destroy db
+
+@test function test_SqliteDb_select_multipleColumns()
+    let db = _createTestDb()
+    let rows = db.select("SELECT name, role, power_level FROM heroes WHERE name = 'Merlin'")
+    rows.size().assertEquals(1)
+    let row = rows.get(0)
+    row.col(0).assertEquals("Merlin")
+    row.col(1).assertEquals("Mage")
+    row.col(2).assertEquals("8500")
+    destroy row
+    destroy rows
+    destroy db
+
+// --- SqliteDb.selectFirst tests ---
+
+@test function test_SqliteDb_selectFirst_returnsSingleRow()
+    let db = _createTestDb()
+    let row = db.selectFirst("SELECT name FROM heroes ORDER BY power_level DESC")
+    row.col(0).assertEquals("Arthur")
+    destroy row
+    destroy db
+
+@test function test_SqliteDb_selectFirst_returnsNullWhenEmpty()
+    let db = _createTestDb()
+    let row = db.selectFirst("SELECT name FROM heroes WHERE name = 'Nobody'")
+    assertTrue(row == null)
+    destroy db
+
+// --- SqliteDb.exists tests ---
+
+@test function test_SqliteDb_exists_trueWhenRowPresent()
+    let db = _createTestDb()
+    assertTrue(db.exists("SELECT 1 FROM heroes WHERE name = 'Arthur'"))
+    destroy db
+
+@test function test_SqliteDb_exists_falseWhenNoRows()
+    let db = _createTestDb()
+    assertTrue(not db.exists("SELECT 1 FROM heroes WHERE name = 'Nobody'"))
+    destroy db
+
+// --- SqliteDb.count tests ---
+
+@test function test_SqliteDb_count_returnsRowCount()
+    let db = _createTestDb()
+    db.count("SELECT count(*) FROM heroes").assertEquals(3)
+    destroy db
+
+@test function test_SqliteDb_count_withWhereClause()
+    let db = _createTestDb()
+    db.count("SELECT count(*) FROM heroes WHERE alive = 1").assertEquals(2)
+    destroy db
+
+@test function test_SqliteDb_count_zeroWhenEmpty()
+    let db = _createTestDb()
+    db.count("SELECT count(*) FROM heroes WHERE name = 'Nobody'").assertEquals(0)
+    destroy db
+
+// --- SqliteDb.exec tests ---
+
+@test function test_SqliteDb_exec_insert()
+    let db = _createTestDb()
+    db.exec("INSERT INTO heroes (name, role, power_level, alive) VALUES ('Lancelot', 'Knight', 8800, 1)")
+    db.count("SELECT count(*) FROM heroes").assertEquals(4)
+    let row = db.selectFirst("SELECT name FROM heroes WHERE name = 'Lancelot'")
+    row.col(0).assertEquals("Lancelot")
+    destroy row
+    destroy db
+
+@test function test_SqliteDb_exec_update()
+    let db = _createTestDb()
+    db.exec("UPDATE heroes SET power_level = 9999 WHERE name = 'Arthur'")
+    let row = db.selectFirst("SELECT power_level FROM heroes WHERE name = 'Arthur'")
+    row.colInt(0).assertEquals(9999)
+    destroy row
+    destroy db
+
+@test function test_SqliteDb_exec_delete()
+    let db = _createTestDb()
+    db.exec("DELETE FROM heroes WHERE name = 'Robin'")
+    db.count("SELECT count(*) FROM heroes").assertEquals(2)
+    assertTrue(not db.exists("SELECT 1 FROM heroes WHERE name = 'Robin'"))
+    destroy db
+
+@test function test_SqliteDb_exec_createAndDropTable()
+    let db = new SqliteDb(":memory:")
+    db.exec("CREATE TABLE temp (id INTEGER)")
+    assertTrue(db.exists("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'temp'"))
+    db.exec("DROP TABLE temp")
+    assertTrue(not db.exists("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'temp'"))
+    destroy db
+
+// --- SqliteDb.getHandle escape hatch ---
+
+@test function test_SqliteDb_getHandle_worksWithNativeCalls()
+    let db = _createTestDb()
+    let h = db.getHandle()
+    sqlite_exec(h, "INSERT INTO heroes (name, role, power_level, alive) VALUES ('Gawain', 'Knight', 7500, 1)")
+    let row = db.selectFirst("SELECT name FROM heroes WHERE name = 'Gawain'")
+    row.col(0).assertEquals("Gawain")
+    destroy row
+    destroy db
+
+// --- SQL singleton tests ---
+
+@test function test_SQL_singleton_execAndSelect()
+    SQL.exec("DROP TABLE IF EXISTS _sgtest1")
+    SQL.exec("CREATE TABLE _sgtest1 (id INTEGER PRIMARY KEY, val TEXT)")
+    SQL.exec("INSERT INTO _sgtest1 VALUES (1, 'hello')")
+    let rows = SQL.select("SELECT val FROM _sgtest1 WHERE id = 1")
+    rows.size().assertEquals(1)
+    rows.get(0).col(0).assertEquals("hello")
+    for row in rows
+        destroy row
+    destroy rows
+    SQL.exec("DROP TABLE _sgtest1")
+    SQL.close()
+
+@test function test_SQL_singleton_selectFirst()
+    SQL.exec("DROP TABLE IF EXISTS _sgtest2")
+    SQL.exec("CREATE TABLE _sgtest2 (n TEXT)")
+    SQL.exec("INSERT INTO _sgtest2 VALUES ('alpha')")
+    SQL.exec("INSERT INTO _sgtest2 VALUES ('beta')")
+    let row = SQL.selectFirst("SELECT n FROM _sgtest2 ORDER BY n")
+    row.col(0).assertEquals("alpha")
+    destroy row
+    SQL.exec("DROP TABLE _sgtest2")
+    SQL.close()
+
+@test function test_SQL_singleton_exists()
+    SQL.exec("DROP TABLE IF EXISTS _sgtest3")
+    SQL.exec("CREATE TABLE _sgtest3 (x INTEGER)")
+    SQL.exec("INSERT INTO _sgtest3 VALUES (42)")
+    assertTrue(SQL.exists("SELECT 1 FROM _sgtest3 WHERE x = 42"))
+    assertTrue(not SQL.exists("SELECT 1 FROM _sgtest3 WHERE x = 99"))
+    SQL.exec("DROP TABLE _sgtest3")
+    SQL.close()
+
+@test function test_SQL_singleton_count()
+    SQL.exec("DROP TABLE IF EXISTS _sgtest4")
+    SQL.exec("CREATE TABLE _sgtest4 (x INTEGER)")
+    SQL.exec("INSERT INTO _sgtest4 VALUES (1)")
+    SQL.exec("INSERT INTO _sgtest4 VALUES (2)")
+    SQL.exec("INSERT INTO _sgtest4 VALUES (3)")
+    SQL.count("SELECT count(*) FROM _sgtest4").assertEquals(3)
+    SQL.exec("DROP TABLE _sgtest4")
+    SQL.close()
+
+@test function test_SQL_singleton_closeAndReopen()
+    SQL.exec("CREATE TABLE _sgtest5 (v TEXT)")
+    SQL.exec("INSERT INTO _sgtest5 VALUES ('before')")
+    SQL.count("SELECT count(*) FROM _sgtest5").assertEquals(1)
+    SQL.close()
+    // After close on :memory:, previous data is gone — verify a fresh connection works
+    SQL.exec("CREATE TABLE _sgtest5 (v TEXT)")
+    SQL.count("SELECT count(*) FROM _sgtest5").assertEquals(0)
+    SQL.exec("DROP TABLE _sgtest5")
+    SQL.close()
+
+// --- Edge cases ---
+
+@test function test_SqliteDb_select_orderByDescending()
+    let db = _createTestDb()
+    let rows = db.select("SELECT name, power_level FROM heroes ORDER BY power_level DESC")
+    rows.get(0).col(0).assertEquals("Arthur")
+    rows.get(0).colInt(1).assertEquals(9000)
+    rows.get(1).col(0).assertEquals("Merlin")
+    rows.get(2).col(0).assertEquals("Robin")
+    for row in rows
+        destroy row
+    destroy rows
+    destroy db
+
+@test function test_SqliteDb_select_withLimitAndOffset()
+    let db = _createTestDb()
+    let rows = db.select("SELECT name FROM heroes ORDER BY name LIMIT 2 OFFSET 1")
+    rows.size().assertEquals(2)
+    rows.get(0).col(0).assertEquals("Merlin")
+    rows.get(1).col(0).assertEquals("Robin")
+    for row in rows
+        destroy row
+    destroy rows
+    destroy db
+
+@test function test_SqliteDb_nullValueReturnsEmptyString()
+    let db = new SqliteDb(":memory:")
+    db.exec("CREATE TABLE nullable (a TEXT, b TEXT)")
+    db.exec("INSERT INTO nullable (a) VALUES ('present')")
+    let row = db.selectFirst("SELECT a, b FROM nullable")
+    row.col(0).assertEquals("present")
+    row.col(1).assertEquals("")
+    destroy row
+    destroy db
+
+@test function test_SqliteDb_multipleTablesJoin()
+    let db = new SqliteDb(":memory:")
+    db.exec("CREATE TABLE authors (id INTEGER PRIMARY KEY, name TEXT)")
+    db.exec("CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, author_id INTEGER)")
+    db.exec("INSERT INTO authors VALUES (1, 'Tolkien')")
+    db.exec("INSERT INTO books VALUES (1, 'The Hobbit', 1)")
+    let row = db.selectFirst("SELECT b.title, a.name FROM books b JOIN authors a ON a.id = b.author_id")
+    row.col(0).assertEquals("The Hobbit")
+    row.col(1).assertEquals("Tolkien")
+    destroy row
+    destroy db
+
+@test function test_SqliteDb_aggregateQueries()
+    let db = _createTestDb()
+    let row = db.selectFirst("SELECT min(power_level), max(power_level), avg(power_level) FROM heroes")
+    row.colInt(0).assertEquals(7200)
+    row.colInt(1).assertEquals(9000)
+    row.size().assertEquals(3)
+    destroy row
+    destroy db
