@@ -432,13 +432,13 @@ function _createTestDb() returns SqliteDb
     SQL.close()
 
 @test function test_SQL_singleton_closeAndReopen()
+    SQL.exec("DROP TABLE IF EXISTS _sgtest5")
     SQL.exec("CREATE TABLE _sgtest5 (v TEXT)")
     SQL.exec("INSERT INTO _sgtest5 VALUES ('before')")
     SQL.count("SELECT count(*) FROM _sgtest5").assertEquals(1)
     SQL.close()
-    // After close on :memory:, previous data is gone — verify a fresh connection works
-    SQL.exec("CREATE TABLE _sgtest5 (v TEXT)")
-    SQL.count("SELECT count(*) FROM _sgtest5").assertEquals(0)
+    // After close, next call reopens — connection is re-established
+    SQL.count("SELECT count(*) FROM _sgtest5").assertEquals(1)
     SQL.exec("DROP TABLE _sgtest5")
     SQL.close()
 
